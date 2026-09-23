@@ -48,7 +48,8 @@
 - **Tipi condivisi**: `Signal`/`RiskLevel` importati da `@seeker-signal/shared` (dipendenza `workspace:*`); verificato sulla doc Expo corrente che dalla SDK 52+ Metro rileva e configura automaticamente i monorepo (incluso pnpm) senza `watchFolders`/`nodeModulesPaths` manuali — non aggiunti, `tsc --noEmit` conferma la risoluzione del pacchetto. `TierLimits`/`MeTierResponse`/`TrackRecordStats` non sono in `@seeker-signal/shared` (che copre solo Signal/RiskReport/SwapRequest) e restano duplicati a mano in `lib/api/types.ts`, da tenere in sync con l'engine.
 - **UI dark**: `userInterfaceStyle: "dark"` in `app.json`, palette e stili in `constants/app-styles.ts`.
 - **`experiments.typedRoutes` disattivato**: richiede che Expo CLI generi `.expo/types/router.d.ts` al primo avvio, cosa che non è verificabile in questo ambiente (nessun device/emulatore Android disponibile); da riattivare quando si esegue `pnpm android`/`pnpm start` per la prima volta, se lo si desidera.
-- Verificato: `pnpm install` alla radice del monorepo, `tsc --noEmit`, `expo lint`, `prettier --check` tutti puliti in `apps/mobile`. **Non è stato possibile eseguire `expo run:android` o installare su un device/emulatore reale in questo ambiente** (nessun SDK Android/emulatore disponibile qui) — verificare questi passaggi manualmente prima di considerare la fase completa.
+- Verificato: `pnpm install` alla radice del monorepo, `tsc --noEmit`, `expo lint`, `prettier --check` tutti puliti in `apps/mobile`.
+- **Build e installazione reale sul Seeker confermate** (fatto insieme all'utente dopo il completamento di F3, vedi sotto per il setup toolchain): `pnpm android` installa e avvia l'app, connessione wallet via MWA funzionante.
 
 ## F3 — Push FCM tier-aware + deep link al segnale
 
@@ -62,7 +63,10 @@
   - `lib/push/use-notification-deep-link.ts`: `getInitialNotification` (cold start) + `onNotificationOpenedApp` (background) portano al `route` nel payload dati (`/signal/[id]` o `/plans`); `onMessage` mostra un `Alert` quando la notifica arriva ad app aperta (FCM non la mostra da sola in foreground).
   - `setBackgroundMessageHandler` registrato nell'entry file (`index.js`), come richiesto dalla doc.
   - `app.json`: aggiunto `android.googleServicesFile` e i due plugin `@react-native-firebase/app`/`@react-native-firebase/messaging`. **`google-services.json` non esiste ancora** (va scaricato dalla Firebase Console, passi sotto) — finché manca, `expo prebuild`/`expo run:android` falliscono.
-- Stato: typecheck/lint/prettier puliti in tutti e 3 i package, 124 test verdi nell'engine (117, +11 nuovi per il push). **Non verificabile in questo ambiente**: build/installazione reale su Seeker (nessun SDK Android), consegna FCM reale (nessuna credenziale Firebase disponibile qui) — il fail-soft del sender e il flusso di scheduling sono comunque confermati dal vivo.
+- Stato: typecheck/lint/prettier puliti in tutti e 3 i package, 124 test verdi nell'engine (117, +11 nuovi per il push).
+- **Toolchain Android impostata e build reale confermata sul Seeker**: Android Studio (SDK + NDK 27.1.12297006 + CMake 3.22.1) via `brew install --cask android-studio`, `ANDROID_HOME`/`platform-tools` in `~/.zshrc`. **Nota toolchain**: il JBR (JDK 25) incluso in Android Studio rompe la build nativa (`configureCMakeDebug` fallisce con "WARNING: A restricted method in java.lang.System has been called" — il task Prefab di AGP tratta come errore fatale un warning stampato da JDK 25+ sulle restricted method, bug noto di compatibilità fra JDK molto recenti e l'AGP corrente). Risolto installando **Temurin JDK 17** (`brew install --cask temurin@17`) e puntando `JAVA_HOME` lì invece che al JBR di Android Studio.
+- Credenziali Firebase reali configurate e verificate dal vivo: `.env` (service account) fa autenticare correttamente firebase-admin (risposta `NotRegistered` su un token finto = credenziali valide, non un errore di auth); `apps/mobile/google-services.json` scaricato e posizionato, package name verificato combaciante con `app.json`.
+- `pnpm android` installa e avvia l'app sul Seeker; connessione wallet via MWA confermata funzionante.
 
 ### Passi manuali su Firebase Console (necessari prima di poter testare le push)
 

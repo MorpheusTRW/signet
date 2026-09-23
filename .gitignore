@@ -8,4 +8,6 @@ build/
 coverage/
 .expo/
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
