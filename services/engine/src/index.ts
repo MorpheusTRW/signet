@@ -14,6 +14,7 @@ import type { ResolveTierDeps } from "./entitlements/resolve-tier.js";
 import { loadEnv } from "./env.js";
 import type { EventSource } from "./ingest/event-source.js";
 import { SyntheticEventSource } from "./ingest/synthetic-event-source.js";
+import type { PaperTradingConfig } from "./paper-trading/types.js";
 import { startPushDispatcher } from "./push/dispatcher.js";
 import { scheduleSignalPush } from "./push/schedule-signal-push.js";
 import { createPushSender } from "./push/sender.js";
@@ -31,14 +32,22 @@ const signalDeliveriesRepo = new SignalDeliveriesRepo(db);
 const trackRecordsRepo = new TrackRecordsRepo(db);
 const pushNotificationsRepo = new PushNotificationsRepo(db);
 
+const paperTradingConfig: PaperTradingConfig = {
+  portfolioValueSol: env.PAPER_PORTFOLIO_SOL,
+  maxExposureFraction: env.MAX_PORTFOLIO_EXPOSURE,
+  defaultPositionSizeSol: env.PAPER_DEFAULT_POSITION_SOL,
+};
+
 const tierConfig = buildTierConfig(env);
 
-// Verifica HOLDER: senza SOLANA_RPC_URL non c'è modo di leggere saldo/stake
-// SKR reali, quindi si degrada a "mai holder" (fail-closed) invece di inventare
-// un dato. Vedi src/entitlements/skr-holder.ts per le fonti sugli indirizzi.
-const skrHolderReader = env.SOLANA_RPC_URL
-  ? createSkrHolderReader(new Connection(env.SOLANA_RPC_URL, "confirmed"))
-  : NULL_SKR_HOLDER_READER;
+// Connessione RPC condivisa (verifica HOLDER + /build-swap). Senza
+// SOLANA_RPC_URL entrambe degradano fail-soft invece di inventare un dato o
+// costruire una tx senza poterla simulare/risolvere.
+const connection = env.SOLANA_RPC_URL
+  ? new Connection(env.SOLANA_RPC_URL, "confirmed")
+  : undefined;
+
+const skrHolderReader = connection ? createSkrHolderReader(connection) : NULL_SKR_HOLDER_READER;
 
 const holderChecker = createHolderChecker(
   skrHolderReader,
@@ -58,6 +67,14 @@ const app = buildServer(env, {
   signalDeliveriesRepo,
   trackRecordsRepo,
   resolveTierDeps,
+  paperTradesRepo,
+  paperTradingConfig,
+  buildSwap: {
+    connection,
+    treasuryWalletPubkey: env.TREASURY_WALLET_PUBKEY,
+    jupiterApiBaseUrl: env.JUPITER_API_BASE_URL,
+    tradingMode: env.TRADING_MODE,
+  },
 });
 
 // Senza credenziali FIREBASE_* configurate, il sender fallisce ogni invio: le
@@ -90,11 +107,7 @@ eventSource.start((event) => {
     signalsRepo,
     paperTradesRepo,
     trackRecordsRepo,
-    paperTradingConfig: {
-      portfolioValueSol: env.PAPER_PORTFOLIO_SOL,
-      maxExposureFraction: env.MAX_PORTFOLIO_EXPOSURE,
-      defaultPositionSizeSol: env.PAPER_DEFAULT_POSITION_SOL,
-    },
+    paperTradingConfig,
   });
 
   scheduleSignalPush(signal, {

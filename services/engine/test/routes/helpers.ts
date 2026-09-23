@@ -1,7 +1,9 @@
+import type { Connection } from "@solana/web3.js";
 import type { FastifyInstance } from "fastify";
 import { createDb, type DbClient } from "../../src/db/client.js";
 import { buildTierConfig } from "../../src/config/monetization.js";
 import { DevicesRepo } from "../../src/db/devices-repo.js";
+import { PaperTradesRepo } from "../../src/db/paper-trades-repo.js";
 import { SignalDeliveriesRepo } from "../../src/db/signal-deliveries-repo.js";
 import { SignalsRepo } from "../../src/db/signals-repo.js";
 import { SubscriptionsRepo } from "../../src/db/subscriptions-repo.js";
@@ -9,6 +11,7 @@ import { TrackRecordsRepo } from "../../src/db/track-records-repo.js";
 import type { HolderChecker } from "../../src/entitlements/holder-check.js";
 import type { ResolveTierDeps } from "../../src/entitlements/resolve-tier.js";
 import { loadEnv } from "../../src/env.js";
+import type { PaperTradingConfig } from "../../src/paper-trading/types.js";
 import { buildServer } from "../../src/server.js";
 
 /** Mai holder, per default: i test che vogliono simulare un HOLDER passano un override. */
@@ -18,7 +21,18 @@ export const NEVER_HOLDER: HolderChecker = {
   },
 };
 
-export function createTestApp(overrides: { holderChecker?: HolderChecker } = {}): {
+export function createTestApp(
+  overrides: {
+    holderChecker?: HolderChecker;
+    paperTradingConfig?: Partial<PaperTradingConfig>;
+    buildSwap?: {
+      connection?: Connection;
+      treasuryWalletPubkey?: string;
+      jupiterApiBaseUrl?: string;
+      tradingMode?: "paper" | "live";
+    };
+  } = {},
+): {
   app: FastifyInstance;
   db: DbClient;
   signalsRepo: SignalsRepo;
@@ -26,6 +40,7 @@ export function createTestApp(overrides: { holderChecker?: HolderChecker } = {})
   signalDeliveriesRepo: SignalDeliveriesRepo;
   subscriptionsRepo: SubscriptionsRepo;
   trackRecordsRepo: TrackRecordsRepo;
+  paperTradesRepo: PaperTradesRepo;
   resolveTierDeps: ResolveTierDeps;
 } {
   const db = createDb(":memory:");
@@ -36,11 +51,19 @@ export function createTestApp(overrides: { holderChecker?: HolderChecker } = {})
   const signalDeliveriesRepo = new SignalDeliveriesRepo(db);
   const subscriptionsRepo = new SubscriptionsRepo(db);
   const trackRecordsRepo = new TrackRecordsRepo(db);
+  const paperTradesRepo = new PaperTradesRepo(db);
 
   const resolveTierDeps: ResolveTierDeps = {
     subscriptionsRepo,
     holderChecker: overrides.holderChecker ?? NEVER_HOLDER,
     tierConfig: buildTierConfig(env),
+  };
+
+  const paperTradingConfig: PaperTradingConfig = {
+    portfolioValueSol: env.PAPER_PORTFOLIO_SOL,
+    maxExposureFraction: env.MAX_PORTFOLIO_EXPOSURE,
+    defaultPositionSizeSol: env.PAPER_DEFAULT_POSITION_SOL,
+    ...overrides.paperTradingConfig,
   };
 
   const app = buildServer(env, {
@@ -49,6 +72,14 @@ export function createTestApp(overrides: { holderChecker?: HolderChecker } = {})
     signalDeliveriesRepo,
     trackRecordsRepo,
     resolveTierDeps,
+    paperTradesRepo,
+    paperTradingConfig,
+    buildSwap: {
+      connection: overrides.buildSwap?.connection,
+      treasuryWalletPubkey: overrides.buildSwap?.treasuryWalletPubkey,
+      jupiterApiBaseUrl: overrides.buildSwap?.jupiterApiBaseUrl ?? env.JUPITER_API_BASE_URL,
+      tradingMode: overrides.buildSwap?.tradingMode ?? env.TRADING_MODE,
+    },
   });
 
   return {
@@ -59,6 +90,7 @@ export function createTestApp(overrides: { holderChecker?: HolderChecker } = {})
     signalDeliveriesRepo,
     subscriptionsRepo,
     trackRecordsRepo,
+    paperTradesRepo,
     resolveTierDeps,
   };
 }

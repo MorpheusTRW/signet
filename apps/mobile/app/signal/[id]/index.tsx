@@ -1,13 +1,26 @@
-import { useLocalSearchParams } from 'expo-router'
+import { useState } from 'react'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { ScrollView, Text, View } from 'react-native'
+import { ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { RiskLevel } from '@seeker-signal/shared'
+import { AppActionButton } from '@/components/app-action-button'
 import { appStyles, colors } from '@/constants/app-styles'
 import { getSignal } from '@/lib/api/client'
 
 const RISK_LABELS: Record<RiskLevel, string> = { low: 'Basso', medium: 'Medio', high: 'Alto' }
 const RISK_COLORS: Record<RiskLevel, string> = { low: colors.success, medium: colors.warning, high: colors.danger }
+
+const DEFAULT_AMOUNT_SOL = '0.1'
+const DEFAULT_SLIPPAGE_BPS = '100'
+
+const inputStyle = {
+  color: colors.text,
+  fontSize: 20,
+  borderBottomWidth: 1,
+  borderBottomColor: colors.border,
+  paddingVertical: 6,
+}
 
 export default function SignalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -16,6 +29,9 @@ export default function SignalDetailScreen() {
     queryFn: () => getSignal(id),
     enabled: !!id,
   })
+
+  const [amountSol, setAmountSol] = useState(DEFAULT_AMOUNT_SOL)
+  const [slippageBps, setSlippageBps] = useState(DEFAULT_SLIPPAGE_BPS)
 
   if (query.isLoading) {
     return (
@@ -63,6 +79,22 @@ export default function SignalDetailScreen() {
           <Text style={appStyles.textMuted}>Liquidità iniziale: {signal.initialLiquiditySol} SOL</Text>
           <Text style={appStyles.textMuted}>Pool: {signal.poolAddress}</Text>
           <Text style={appStyles.textMuted}>Creato: {new Date(signal.createdAt).toLocaleString()}</Text>
+        </View>
+
+        <View style={appStyles.card}>
+          <Text style={appStyles.subtitle}>Importo (SOL)</Text>
+          <TextInput style={inputStyle} keyboardType="decimal-pad" value={amountSol} onChangeText={setAmountSol} />
+          <Text style={appStyles.subtitle}>Slippage (bps)</Text>
+          <TextInput style={inputStyle} keyboardType="number-pad" value={slippageBps} onChangeText={setSlippageBps} />
+          <AppActionButton
+            title="Approva Entry"
+            onPress={async () => {
+              router.push({
+                pathname: '/signal/[id]/approve',
+                params: { id: signal.id, amountSol, slippageBps },
+              })
+            }}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

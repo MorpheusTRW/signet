@@ -45,3 +45,29 @@ export interface RegisterDeviceResponse {
   apiKey: string
   createdAt: string
 }
+
+export interface BuildSwapQuote {
+  outAmount: string
+  outAmountUi: number | null
+  otherAmountThreshold: string
+  priceImpactPct: string
+  slippageBps: number
+}
+
+export interface BuildSwapResponse {
+  transactionBase64: string
+  amountSol: number
+  feeBps: number
+  feeSol: number
+  feeAccount: string
+  blockhash: string
+  lastValidBlockHeight: number
+  quote: BuildSwapQuote
+  tradingMode: 'paper' | 'live'
+}
+
+export interface BuildSwapErrorBody {
+  error: string
+  message?: string
+  remainingSol?: number
+}

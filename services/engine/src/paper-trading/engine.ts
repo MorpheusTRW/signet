@@ -8,6 +8,15 @@ export function isSignalApprovable(riskReport: RiskReport): boolean {
   return riskReport.level !== "high";
 }
 
+/** Margine residuo, in SOL, prima di toccare il limite di esposizione (principio 3). */
+export function remainingExposureSol(
+  currentOpenExposureSol: number,
+  config: PaperTradingConfig,
+): number {
+  const maxExposureSol = config.portfolioValueSol * config.maxExposureFraction;
+  return Math.max(0, maxExposureSol - currentOpenExposureSol);
+}
+
 /**
  * Quanto è possibile investire in una nuova entry senza superare il limite di
  * esposizione (CLAUDE.md, principio 3): mai più di `maxExposureFraction` del
@@ -17,10 +26,7 @@ export function computeEntrySize(
   currentOpenExposureSol: number,
   config: PaperTradingConfig,
 ): number {
-  const maxExposureSol = config.portfolioValueSol * config.maxExposureFraction;
-  const remaining = maxExposureSol - currentOpenExposureSol;
-  if (remaining <= 0) return 0;
-  return Math.min(config.defaultPositionSizeSol, remaining);
+  return Math.min(config.defaultPositionSizeSol, remainingExposureSol(currentOpenExposureSol, config));
 }
 
 const OUTCOME_RANGE_BY_LEVEL: Record<RiskLevel, [number, number]> = {

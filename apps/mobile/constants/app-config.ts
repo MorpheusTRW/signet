@@ -6,12 +6,16 @@ export class AppConfig {
   static name = 'Seeker Signal'
   static uri = 'https://seekersignal.app'
 
-  // Devnet per sviluppo/test del bottone di debug (F2). Il passaggio a
-  // mainnet-beta per il live trading è previsto in F5, dietro flag esplicito.
+  // Mainnet-beta: Jupiter instrada solo su mainnet (nessuna liquidità reale
+  // su devnet) e i token pump.fun/PumpSwap/Meteora esistono solo lì. Da F4 il
+  // bottone di debug (F2) firma quindi su mainnet — una fee reale (trascurabile,
+  // ~0.000005 SOL) invece che gratuita su devnet. L'RPC pubblico di
+  // clusterApiUrl ha rate limit stretti: sovrascrivibile con
+  // EXPO_PUBLIC_SOLANA_RPC_URL per un endpoint dedicato in produzione.
   static cluster: SolanaCluster = {
-    id: 'solana:devnet',
-    label: 'Devnet',
-    url: clusterApiUrl('devnet'),
+    id: 'solana:mainnet',
+    label: 'Mainnet',
+    url: process.env.EXPO_PUBLIC_SOLANA_RPC_URL ?? clusterApiUrl('mainnet-beta'),
   }
 
   static engineApiUrl = process.env.EXPO_PUBLIC_ENGINE_API_URL ?? 'http://localhost:3000'

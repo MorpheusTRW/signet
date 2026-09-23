@@ -11,7 +11,7 @@ const envSchema = z.object({
     .enum(["synthetic", "helius-ws", "yellowstone-grpc"])
     .default("synthetic"),
   HELIUS_API_KEY: z.string().optional(),
-  JUPITER_API_BASE_URL: z.string().optional(),
+  JUPITER_API_BASE_URL: z.string().default("https://api.jup.ag"),
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
@@ -39,10 +39,24 @@ const envSchema = z.object({
 
   // Push FCM (F3): intervallo di polling delle notifiche pianificate e dovute.
   PUSH_DISPATCH_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
+
+  // /build-swap (F4): wallet che incassa la platform fee (come ATA wSOL).
+  // Opzionale: se assente, /build-swap risponde 503 invece di costruire una
+  // tx senza un posto dove incassare la fee.
+  TREASURY_WALLET_PUBKEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  return envSchema.parse(source);
+  // Un "KEY=" vuoto in .env (tutte le chiavi opzionali in .env.example sono
+  // scritte così) va trattato come "non impostato", non come stringa vuota:
+  // altrimenti z.string().default(...) non scatta mai (il default si applica
+  // solo a `undefined`, non a ""), e i controlli fail-soft basati su troncamento
+  // vero/falso restano comunque corretti ma il valore letto sarebbe "" invece
+  // che il default atteso.
+  const normalized = Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [key, value === "" ? undefined : value]),
+  );
+  return envSchema.parse(normalized);
 }
