@@ -1,0 +1,65 @@
+import type { Signal } from "@seeker-signal/shared";
+import type { TierLimits } from "./types.js";
+
+export interface SelectSignalsParams {
+  now: Date;
+  /** Candidati già ordinati per createdAt decrescente (più recente prima). */
+  candidatesDesc: Signal[];
+  limits: TierLimits;
+  /** Id dei segnali già consegnati oggi a questo wallet (solo rilevante se maxSignalsPerDay è impostato). */
+  alreadyDeliveredIdsToday: ReadonlySet<string>;
+  requestedLimit: number;
+}
+
+export interface SelectSignalsResult {
+  signals: Signal[];
+  /** Id dei segnali inclusi in questa risposta che non erano ancora stati consegnati oggi. */
+  newlyDeliveredIds: string[];
+}
+
+/**
+ * Applica ritardo, finestra di storico e limite giornaliero (FREE) a un feed
+ * di segnali. PRO/HOLDER hanno `signalDelaySeconds: 0`, `maxSignalsPerDay:
+ * null` e `historyHours: null`, quindi vedono tutto in tempo reale.
+ */
+export function selectSignalsForTier(
+  params: SelectSignalsParams,
+): SelectSignalsResult {
+  const { now, candidatesDesc, limits, alreadyDeliveredIdsToday, requestedLimit } =
+    params;
+
+  const cutoff = new Date(now.getTime() - limits.signalDelaySeconds * 1000);
+  const historyFloor =
+    limits.historyHours != null
+      ? new Date(now.getTime() - limits.historyHours * 3_600_000)
+      : null;
+
+  const eligible = candidatesDesc.filter((signal) => {
+    const createdAt = new Date(signal.createdAt);
+    if (createdAt > cutoff) return false;
+    if (historyFloor && createdAt < historyFloor) return false;
+    return true;
+  });
+
+  if (limits.maxSignalsPerDay == null) {
+    return { signals: eligible.slice(0, requestedLimit), newlyDeliveredIds: [] };
+  }
+
+  const alreadyDelivered = eligible.filter((s) =>
+    alreadyDeliveredIdsToday.has(s.id),
+  );
+  const notYetDelivered = eligible.filter(
+    (s) => !alreadyDeliveredIdsToday.has(s.id),
+  );
+  const remainingQuota = Math.max(
+    0,
+    limits.maxSignalsPerDay - alreadyDeliveredIdsToday.size,
+  );
+  const newlyIncluded = notYetDelivered.slice(0, remainingQuota);
+
+  const merged = [...alreadyDelivered, ...newlyIncluded]
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    .slice(0, requestedLimit);
+
+  return { signals: merged, newlyDeliveredIds: newlyIncluded.map((s) => s.id) };
+}

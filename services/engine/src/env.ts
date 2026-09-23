@@ -21,6 +21,21 @@ const envSchema = z.object({
   PAPER_PORTFOLIO_SOL: z.coerce.number().positive().default(100),
   PAPER_DEFAULT_POSITION_SOL: z.coerce.number().positive().default(2),
   SYNTHETIC_INTERVAL_MS: z.coerce.number().int().positive().default(8000),
+
+  // RPC per letture on-chain reali (saldo/stake SKR per il tier HOLDER).
+  // Opzionale: se assente, la verifica HOLDER degrada a "non holder" (fail-closed).
+  SOLANA_RPC_URL: z.string().optional(),
+
+  // Monetizzazione (CLAUDE.md, sezione Monetizzazione): soglie e bps in config.
+  FREE_SIGNAL_DELAY_SECONDS: z.coerce.number().int().nonnegative().default(45),
+  FREE_MAX_SIGNALS_PER_DAY: z.coerce.number().int().positive().default(20),
+  FREE_HISTORY_HOURS: z.coerce.number().positive().default(24),
+  PRO_SUBSCRIPTION_DAYS: z.coerce.number().int().positive().default(30),
+  HOLDER_MIN_SKR: z.coerce.number().positive().default(10_000),
+  FREE_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(75),
+  PRO_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(50),
+  HOLDER_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(30),
+  HOLDER_CACHE_TTL_MS: z.coerce.number().int().positive().default(10 * 60 * 1000),
 });
 
 export type Env = z.infer<typeof envSchema>;

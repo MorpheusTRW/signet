@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDb, type DbClient } from "../../src/db/client.js";
 import { PaperTradesRepo } from "../../src/db/paper-trades-repo.js";
 import { SignalsRepo } from "../../src/db/signals-repo.js";
+import { TrackRecordsRepo } from "../../src/db/track-records-repo.js";
 import type { PaperTradingConfig } from "../../src/paper-trading/types.js";
 import { processLaunchEvent } from "../../src/signals/pipeline.js";
 import { makeRawLaunchEvent } from "../fixtures.js";
@@ -10,12 +11,13 @@ function setup() {
   const db: DbClient = createDb(":memory:");
   const signalsRepo = new SignalsRepo(db);
   const paperTradesRepo = new PaperTradesRepo(db);
+  const trackRecordsRepo = new TrackRecordsRepo(db);
   const paperTradingConfig: PaperTradingConfig = {
     portfolioValueSol: 100,
     maxExposureFraction: 0.2, // max 20 SOL open
     defaultPositionSizeSol: 5,
   };
-  return { db, signalsRepo, paperTradesRepo, paperTradingConfig };
+  return { db, signalsRepo, paperTradesRepo, trackRecordsRepo, paperTradingConfig };
 }
 
 describe("processLaunchEvent", () => {
@@ -36,6 +38,10 @@ describe("processLaunchEvent", () => {
     expect(signal.riskReport.level).toBe("high");
     expect(ctx.signalsRepo.findById(signal.id)).toBeDefined();
     expect(ctx.paperTradesRepo.listBySignalId(signal.id)).toHaveLength(0);
+
+    const trackRecords = ctx.trackRecordsRepo.list();
+    expect(trackRecords).toHaveLength(1);
+    expect(trackRecords[0]!.category).toBe("discarded");
     ctx.db.close();
   });
 
@@ -50,6 +56,10 @@ describe("processLaunchEvent", () => {
     expect(trades).toHaveLength(1);
     expect(trades[0]!.sizeSol).toBe(5);
     expect(trades[0]!.status).toBe("open");
+
+    const trackRecords = ctx.trackRecordsRepo.list();
+    expect(trackRecords).toHaveLength(1);
+    expect(trackRecords[0]!.category).toBe("signaled");
     ctx.db.close();
   });
 

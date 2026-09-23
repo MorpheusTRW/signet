@@ -80,4 +80,17 @@ export class SignalsRepo {
       .all(limit) as SignalRow[];
     return rows.map(rowToSignal);
   }
+
+  /** Segnali con createdAt >= sinceIso (o tutti, se sinceIso è null), più recenti prima. */
+  listSince(sinceIso: string | null, limit: number): Signal[] {
+    if (sinceIso === null) {
+      return this.list(limit);
+    }
+    const rows = this.db
+      .prepare(
+        "SELECT * FROM signals WHERE created_at >= ? ORDER BY created_at DESC LIMIT ?",
+      )
+      .all(sinceIso, limit) as SignalRow[];
+    return rows.map(rowToSignal);
+  }
 }
