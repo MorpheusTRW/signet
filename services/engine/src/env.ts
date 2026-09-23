@@ -36,6 +36,9 @@ const envSchema = z.object({
   PRO_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(50),
   HOLDER_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(30),
   HOLDER_CACHE_TTL_MS: z.coerce.number().int().positive().default(10 * 60 * 1000),
+
+  // Push FCM (F3): intervallo di polling delle notifiche pianificate e dovute.
+  PUSH_DISPATCH_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
 });
 
 export type Env = z.infer<typeof envSchema>;

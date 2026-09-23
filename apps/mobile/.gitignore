@@ -41,3 +41,7 @@ app-example
 # generated native folders
 /ios
 /android
+
+# config specifico del progetto Firebase, scaricato dalla Console (F3)
+google-services.json
+GoogleService-Info.plist

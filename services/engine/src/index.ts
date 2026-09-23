@@ -2,6 +2,7 @@ import { Connection } from "@solana/web3.js";
 import { createDb } from "./db/client.js";
 import { DevicesRepo } from "./db/devices-repo.js";
 import { PaperTradesRepo } from "./db/paper-trades-repo.js";
+import { PushNotificationsRepo } from "./db/push-notifications-repo.js";
 import { SignalDeliveriesRepo } from "./db/signal-deliveries-repo.js";
 import { SignalsRepo } from "./db/signals-repo.js";
 import { SubscriptionsRepo } from "./db/subscriptions-repo.js";
@@ -13,6 +14,9 @@ import type { ResolveTierDeps } from "./entitlements/resolve-tier.js";
 import { loadEnv } from "./env.js";
 import type { EventSource } from "./ingest/event-source.js";
 import { SyntheticEventSource } from "./ingest/synthetic-event-source.js";
+import { startPushDispatcher } from "./push/dispatcher.js";
+import { scheduleSignalPush } from "./push/schedule-signal-push.js";
+import { createPushSender } from "./push/sender.js";
 import { buildServer } from "./server.js";
 import { processLaunchEvent } from "./signals/pipeline.js";
 
@@ -25,6 +29,7 @@ const paperTradesRepo = new PaperTradesRepo(db);
 const subscriptionsRepo = new SubscriptionsRepo(db);
 const signalDeliveriesRepo = new SignalDeliveriesRepo(db);
 const trackRecordsRepo = new TrackRecordsRepo(db);
+const pushNotificationsRepo = new PushNotificationsRepo(db);
 
 const tierConfig = buildTierConfig(env);
 
@@ -47,6 +52,24 @@ const resolveTierDeps: ResolveTierDeps = {
   tierConfig,
 };
 
+const app = buildServer(env, {
+  signalsRepo,
+  devicesRepo,
+  signalDeliveriesRepo,
+  trackRecordsRepo,
+  resolveTierDeps,
+});
+
+// Senza credenziali FIREBASE_* configurate, il sender fallisce ogni invio: le
+// notifiche restano pianificate ("pending") ma non partono mai (fail-soft,
+// stesso pattern della verifica HOLDER).
+const pushSender = createPushSender(env);
+const stopPushDispatcher = startPushDispatcher(
+  { pushNotificationsRepo, devicesRepo, sender: pushSender },
+  env.PUSH_DISPATCH_INTERVAL_MS,
+  app.log,
+);
+
 function createEventSource(): EventSource {
   switch (env.EVENT_SOURCE) {
     case "synthetic":
@@ -63,7 +86,7 @@ function createEventSource(): EventSource {
 
 const eventSource = createEventSource();
 eventSource.start((event) => {
-  processLaunchEvent(event, {
+  const signal = processLaunchEvent(event, {
     signalsRepo,
     paperTradesRepo,
     trackRecordsRepo,
@@ -73,17 +96,19 @@ eventSource.start((event) => {
       defaultPositionSizeSol: env.PAPER_DEFAULT_POSITION_SOL,
     },
   });
-});
 
-const app = buildServer(env, {
-  signalsRepo,
-  devicesRepo,
-  signalDeliveriesRepo,
-  trackRecordsRepo,
-  resolveTierDeps,
+  scheduleSignalPush(signal, {
+    devicesRepo,
+    pushNotificationsRepo,
+    signalDeliveriesRepo,
+    resolveTierDeps,
+  }).catch((error: unknown) => {
+    app.log.warn({ err: error }, "scheduleSignalPush fallito");
+  });
 });
 
 app.addHook("onClose", async () => {
+  stopPushDispatcher();
   await eventSource.stop();
   db.close();
 });

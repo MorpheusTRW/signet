@@ -1,9 +1,9 @@
 import type { Signal } from '@seeker-signal/shared'
 import { AppConfig } from '@/constants/app-config'
-import type { MeTierResponse, TrackRecordStats } from './types'
+import type { MeTierResponse, RegisterDeviceResponse, TrackRecordStats } from './types'
 
-async function request<T>(path: string): Promise<T> {
-  const response = await fetch(`${AppConfig.engineApiUrl}${path}`)
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${AppConfig.engineApiUrl}${path}`, init)
   if (!response.ok) {
     throw new Error(`Engine API ${path} -> ${response.status}`)
   }
@@ -28,4 +28,12 @@ export function getMeTier(pubkey: string): Promise<MeTierResponse> {
 
 export function getTrackRecord(): Promise<TrackRecordStats> {
   return request<TrackRecordStats>('/track-record')
+}
+
+export function registerDevice(params: { fcmToken: string; walletPubkey: string }): Promise<RegisterDeviceResponse> {
+  return request<RegisterDeviceResponse>('/devices', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  })
 }

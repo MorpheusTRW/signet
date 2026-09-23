@@ -38,3 +38,10 @@ export interface TrackRecordStats {
   discarded: CategoryStats
   signaled: CategoryStats
 }
+
+export interface RegisterDeviceResponse {
+  deviceId: string
+  walletPubkey: string
+  apiKey: string
+  createdAt: string
+}

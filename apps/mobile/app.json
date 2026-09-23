@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.seekersignal.app"
+      "package": "com.seekersignal.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -32,6 +33,8 @@
           "skipOnboarding": true
         }
       ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       "expo-font",
       "expo-router",
       [

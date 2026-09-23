@@ -80,6 +80,24 @@ CREATE TABLE IF NOT EXISTS track_records (
 
 CREATE INDEX IF NOT EXISTS idx_track_records_category ON track_records(category);
 CREATE INDEX IF NOT EXISTS idx_track_records_settle ON track_records(settled_1h, settled_24h);
+
+CREATE TABLE IF NOT EXISTS push_notifications (
+  id TEXT PRIMARY KEY,
+  device_id TEXT NOT NULL REFERENCES devices(id),
+  wallet_pubkey TEXT NOT NULL,
+  signal_id TEXT REFERENCES signals(id),
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  data_json TEXT NOT NULL,
+  scheduled_at TEXT NOT NULL,
+  sent_at TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  error TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_push_notifications_due ON push_notifications(status, scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_push_notifications_device_type_day ON push_notifications(device_id, type, scheduled_at);
 `;
 
 export type DbClient = Database.Database;

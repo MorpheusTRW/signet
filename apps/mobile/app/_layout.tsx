@@ -2,11 +2,13 @@ import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import 'react-native-reanimated'
 import { AppProviders } from '@/components/app-providers'
+import { PushEffects } from '@/components/push-effects'
 import { colors } from '@/constants/app-styles'
 
 export default function RootLayout() {
   return (
     <AppProviders>
+      <PushEffects />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.background },

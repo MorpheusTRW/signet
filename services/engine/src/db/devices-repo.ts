@@ -9,6 +9,24 @@ export interface DeviceRecord {
   updatedAt: string;
 }
 
+interface DeviceRow {
+  id: string;
+  wallet_pubkey: string;
+  fcm_token: string;
+  created_at: string;
+  updated_at: string;
+}
+
+function rowToDevice(row: DeviceRow): DeviceRecord {
+  return {
+    id: row.id,
+    walletPubkey: row.wallet_pubkey,
+    fcmToken: row.fcm_token,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 export class DevicesRepo {
   constructor(private readonly db: DbClient) {}
 
@@ -57,5 +75,17 @@ export class DevicesRepo {
       createdAt,
       updatedAt: now,
     };
+  }
+
+  findById(id: string): DeviceRecord | undefined {
+    const row = this.db
+      .prepare("SELECT * FROM devices WHERE id = ?")
+      .get(id) as DeviceRow | undefined;
+    return row ? rowToDevice(row) : undefined;
+  }
+
+  listAll(): DeviceRecord[] {
+    const rows = this.db.prepare("SELECT * FROM devices").all() as DeviceRow[];
+    return rows.map(rowToDevice);
   }
 }
