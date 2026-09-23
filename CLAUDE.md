@@ -41,6 +41,19 @@ seeker-signal/
 - Persistenza: SQLite (better-sqlite3) per segnali, device e trade di paper mode.
 - Auth API: API key per device, registrata alla prima apertura.
 
+## Monetizzazione
+
+Tre livelli di accesso (tier), calcolati lato server per ogni wallet:
+- FREE: segnali con ritardo configurabile (default 45s), max N segnali/giorno,
+  solo filtri base, storico ultime 24h.
+- PRO (abbonamento 30 giorni): segnali in tempo reale, filtri personalizzati,
+  storico completo. Pagabile in USDC o SKR con trasferimento on-chain alla treasury.
+- HOLDER: chi detiene o ha in stake almeno X SKR ottiene PRO gratis.
+Fee sugli swap: platformFeeBps configurabile per tier (es. FREE 75, PRO 50,
+HOLDER 30), incassata tramite il meccanismo di platform fee di Jupiter.
+La fee deve essere sempre mostrata all'utente prima della firma.
+Tutti i prezzi, le soglie e le bps stanno in config, non nel codice.
+
 ## apps/mobile
 
 - Partire dal template Expo ufficiale di Solana Mobile. Development build (`expo run:android`), NON Expo Go.
