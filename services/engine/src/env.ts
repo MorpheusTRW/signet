@@ -17,6 +17,10 @@ const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   DATABASE_PATH: z.string().default("./data/seeker-signal.db"),
   MAX_PORTFOLIO_EXPOSURE: z.coerce.number().min(0).max(1).default(0.2),
+  // Paper trading (F1): portafoglio simulato, nessun fondo reale coinvolto.
+  PAPER_PORTFOLIO_SOL: z.coerce.number().positive().default(100),
+  PAPER_DEFAULT_POSITION_SOL: z.coerce.number().positive().default(2),
+  SYNTHETIC_INTERVAL_MS: z.coerce.number().int().positive().default(8000),
 });
 
 export type Env = z.infer<typeof envSchema>;
