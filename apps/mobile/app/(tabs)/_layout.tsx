@@ -14,8 +14,10 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Segnali' }} />
+      <Tabs.Screen name="positions" options={{ title: 'Posizioni' }} />
       <Tabs.Screen name="track-record" options={{ title: 'Track record' }} />
       <Tabs.Screen name="plans" options={{ title: 'Piani' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Impostazioni' }} />
       <Tabs.Screen name="debug" options={{ title: 'Debug' }} />
     </Tabs>
   )

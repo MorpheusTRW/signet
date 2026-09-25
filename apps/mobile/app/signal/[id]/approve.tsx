@@ -8,7 +8,8 @@ import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { AppActionButton } from '@/components/app-action-button'
 import { ConnectWalletButton } from '@/components/connect-wallet-button'
 import { appStyles } from '@/constants/app-styles'
-import { buildSwap, BuildSwapError } from '@/lib/api/client'
+import { buildSwap, BuildSwapError, getPositions, getStatus } from '@/lib/api/client'
+import { useSettings } from '@/lib/settings/settings'
 
 const VALIDATION_REASON_LABELS: Record<string, string> = {
   fee_payer_mismatch: 'Il fee payer della transazione non è il tuo wallet.',
@@ -46,12 +47,36 @@ export default function ApproveEntryScreen() {
   const { account, connection, signAndSendTransactions } = useMobileWallet()
   const pubkey = account?.address.toBase58()
 
+  const { settings } = useSettings()
+
   const buildQuery = useQuery({
     queryKey: ['build-swap', id, pubkey, amountSol, slippageBps],
-    queryFn: () => buildSwap({ signalId: id, pubkey: pubkey!, amountSol, slippageBps }),
-    enabled: !!pubkey && Number.isFinite(amountSol) && Number.isFinite(slippageBps),
+    queryFn: async () => {
+      // Ricontrollo lato app (CLAUDE.md, principio 3): il server applica già gli
+      // stessi limiti, ma l'app non si fida ciecamente e blocca prima di costruire.
+      const status = await getStatus()
+      if (status.killSwitch) throw new Error('Trading sospeso dal servizio (kill switch attivo).')
+      const { portfolio } = await getPositions()
+      if (amountSol > portfolio.remainingSol) {
+        throw new Error(
+          `Supereresti il limite del ${portfolio.maxExposureFraction * 100}% di esposizione: margine residuo ${portfolio.remainingSol.toFixed(4)} SOL.`,
+        )
+      }
+      return buildSwap({ signalId: id, pubkey: pubkey!, amountSol, slippageBps })
+    },
+    enabled: !settings.killSwitch && !!pubkey && Number.isFinite(amountSol) && Number.isFinite(slippageBps),
     retry: false,
   })
+
+  if (settings.killSwitch) {
+    return (
+      <SafeAreaView style={appStyles.screen}>
+        <Text style={appStyles.textDanger}>
+          Kill switch attivo su questo dispositivo: nuove entry bloccate. Disattivalo da Impostazioni.
+        </Text>
+      </SafeAreaView>
+    )
+  }
 
   if (!pubkey) {
     return (

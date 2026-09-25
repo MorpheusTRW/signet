@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PropsWithChildren, useMemo } from 'react'
 import { MobileWalletProvider, type WalletAuthorization } from '@wallet-ui/react-native-web3js'
 import { AppConfig } from '@/constants/app-config'
+import { SettingsProvider } from '@/lib/settings/settings'
 import { createSecureStoreCache } from '@/lib/wallet/secure-store-cache'
 
 const identity = { name: AppConfig.name, uri: AppConfig.uri }
@@ -19,7 +20,7 @@ export function AppProviders({ children }: PropsWithChildren) {
         identity={identity}
         cache={authorizationCache}
       >
-        {children}
+        <SettingsProvider>{children}</SettingsProvider>
       </MobileWalletProvider>
     </QueryClientProvider>
   )

@@ -98,4 +98,17 @@
 - Verificato dal vivo end-to-end con `pnpm dev` + RPC mainnet reale + treasury reale: `/build-swap` su un segnale sintetico (mint fittizio) risponde correttamente 502 con l'errore reale di Jupiter ("Invalid outputMint") — comportamento atteso finché l'ingest resta sintetico (F5 introdurrà l'adapter on-chain reale con mint veri).
 - Stato: typecheck pulito nei 3 package, **145 test verdi** (16 in `packages/shared`, inclusi 9 per `validateSwapTx` che coprono ognuno dei casi di rifiuto richiesti; 129 nell'engine, inclusi 8 per `/build-swap` e 4 per il fix di `loadEnv`). Non verificabile in questo ambiente: firma reale su un Seeker fisico (nessun device collegato in questa sessione) — la costruzione/validazione della tx è comunque confermata contro l'API Jupiter reale.
 
+## F5 — Hardening (in corso)
+
+### Fatto
+- **Setup treasury**: wallet `EunYxAY2…` + ATA wSOL `EuSY634V…` inizializzato on-chain e verificato; `TREASURY_WALLET_PUBKEY`/`SOLANA_RPC_URL` in `.env`. Fix Metro (`metro.config.js`): risolve gli import `.js` di `packages/shared` verso i `.ts`.
+- **Engine — kill switch**: persistito in tabella `settings` (un riavvio non lo disattiva); `KILL_SWITCH=true` lo forza all'avvio, `POST /admin/kill-switch` (Bearer `ADMIN_API_KEY`, confronto timing-safe; senza chiave l'endpoint non esiste) lo cambia a runtime; `GET /status` lo espone. `/build-swap` lo controlla per primo (503, nessuna chiamata esterna).
+- **Engine — limiti/log**: `MAX_SWAP_SOL` (tetto assoluto per richiesta), rate limit per wallet (`BUILD_SWAP_RATE_LIMIT_PER_MIN`, in memoria: si azzera al riavvio e non è condiviso fra istanze), redazione di `authorization`/`x-api-key` nei log pino, audit log di ogni tx costruita.
+- **Engine — `GET /positions`**: posizioni del portafoglio *paper* (unico, non per wallet) + riepilogo esposizione/margine residuo.
+- **App**: tab Posizioni e Impostazioni (size, slippage, kill switch locale in AsyncStorage, stato del servizio da `/status`). "Approva Entry" ora usa i default salvati e **ricontrolla lato app** kill switch (locale e remoto) e limite del 20% (da `/positions`) prima di costruire la tx (principio 3). Nota: le posizioni mostrate sono quelle simulate del paper trading; in modalità paper l'approvazione non crea una posizione.
+- Verificato: typecheck/lint puliti, 138 test engine. Non ancora provato su Seeker.
+
+### Da fare
+- Adapter `helius-ws` (mint/pool reali), adapter bonding curve pump.fun, build per il dApp Store.
+
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).

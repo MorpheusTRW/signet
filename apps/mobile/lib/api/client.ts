@@ -3,7 +3,9 @@ import { AppConfig } from '@/constants/app-config'
 import type {
   BuildSwapErrorBody,
   BuildSwapResponse,
+  EngineStatus,
   MeTierResponse,
+  PositionsResponse,
   RegisterDeviceResponse,
   TrackRecordStats,
 } from './types'
@@ -39,6 +41,14 @@ export function getSignal(id: string): Promise<Signal> {
 
 export function getMeTier(pubkey: string): Promise<MeTierResponse> {
   return request<MeTierResponse>(`/me/tier?pubkey=${encodeURIComponent(pubkey)}`)
+}
+
+export function getStatus(): Promise<EngineStatus> {
+  return request<EngineStatus>('/status')
+}
+
+export function getPositions(): Promise<PositionsResponse> {
+  return request<PositionsResponse>('/positions')
 }
 
 export function getTrackRecord(): Promise<TrackRecordStats> {

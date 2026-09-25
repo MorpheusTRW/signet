@@ -71,3 +71,35 @@ export interface BuildSwapErrorBody {
   message?: string
   remainingSol?: number
 }
+
+export interface EngineStatus {
+  killSwitch: boolean
+  tradingMode: 'paper' | 'live'
+}
+
+export interface PortfolioSummary {
+  valueSol: number
+  maxExposureFraction: number
+  openExposureSol: number
+  remainingSol: number
+  realizedPnlSol: number
+}
+
+export interface PositionItem {
+  id: string
+  signalId: string
+  sizeSol: number
+  outcomeMultiplier: number
+  pnlSol: number
+  status: 'open' | 'closed'
+  openedAt: string
+  closesAt: string
+  closedAt: string | null
+  tokenSymbol: string | null
+  tokenName: string | null
+}
+
+export interface PositionsResponse {
+  portfolio: PortfolioSummary
+  positions: PositionItem[]
+}

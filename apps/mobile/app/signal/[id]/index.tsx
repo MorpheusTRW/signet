@@ -7,12 +7,10 @@ import type { RiskLevel } from '@seeker-signal/shared'
 import { AppActionButton } from '@/components/app-action-button'
 import { appStyles, colors } from '@/constants/app-styles'
 import { getSignal } from '@/lib/api/client'
+import { useSettings } from '@/lib/settings/settings'
 
 const RISK_LABELS: Record<RiskLevel, string> = { low: 'Basso', medium: 'Medio', high: 'Alto' }
 const RISK_COLORS: Record<RiskLevel, string> = { low: colors.success, medium: colors.warning, high: colors.danger }
-
-const DEFAULT_AMOUNT_SOL = '0.1'
-const DEFAULT_SLIPPAGE_BPS = '100'
 
 const inputStyle = {
   color: colors.text,
@@ -30,8 +28,9 @@ export default function SignalDetailScreen() {
     enabled: !!id,
   })
 
-  const [amountSol, setAmountSol] = useState(DEFAULT_AMOUNT_SOL)
-  const [slippageBps, setSlippageBps] = useState(DEFAULT_SLIPPAGE_BPS)
+  const { settings } = useSettings()
+  const [amountSol, setAmountSol] = useState(String(settings.defaultSizeSol))
+  const [slippageBps, setSlippageBps] = useState(String(settings.slippageBps))
 
   if (query.isLoading) {
     return (

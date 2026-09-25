@@ -13,6 +13,7 @@ import type { RateLimiter } from "./safety/rate-limiter.js";
 import { registerBuildSwapRoute, type BuildSwapRouteDeps } from "./routes/build-swap.js";
 import { registerDevicesRoutes } from "./routes/devices.js";
 import { registerMeRoutes } from "./routes/me.js";
+import { registerPositionsRoutes } from "./routes/positions.js";
 import { registerSignalsRoutes } from "./routes/signals.js";
 import { registerTrackRecordRoutes } from "./routes/track-record.js";
 
@@ -52,6 +53,11 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     signalsRepo: deps.signalsRepo,
     signalDeliveriesRepo: deps.signalDeliveriesRepo,
     resolveTierDeps: deps.resolveTierDeps,
+  });
+  registerPositionsRoutes(app, {
+    paperTradesRepo: deps.paperTradesRepo,
+    signalsRepo: deps.signalsRepo,
+    paperTradingConfig: deps.paperTradingConfig,
   });
   registerDevicesRoutes(app, deps.devicesRepo);
   registerMeRoutes(app, deps.resolveTierDeps);
