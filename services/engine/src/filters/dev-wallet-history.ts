@@ -25,6 +25,16 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
     };
   }
 
+  // Storico rug non verificabile: non dichiarare "pulito", e un piccolo malus di prudenza.
+  if (event.unverified?.includes("dev-history")) {
+    return {
+      id: "dev-wallet-history",
+      passed: false,
+      reason: `Storico rug del dev non verificato (wallet attivo da ${walletAgeDays} giorni)`,
+      riskPoints: 5,
+    };
+  }
+
   return {
     id: "dev-wallet-history",
     passed: true,

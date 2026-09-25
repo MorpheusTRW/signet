@@ -1,4 +1,10 @@
-import { getAssociatedTokenAddressSync, getMint, NATIVE_MINT } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddressSync,
+  getMint,
+  NATIVE_MINT,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { type Connection, PublicKey } from "@solana/web3.js";
 import { swapRequestSchema } from "@seeker-signal/shared";
 import type { FastifyInstance } from "fastify";
@@ -136,7 +142,11 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
 
     let outAmountUi: number | null = null;
     try {
-      const mint = await getMint(connection, new PublicKey(signal.tokenMint));
+      const mintKey = new PublicKey(signal.tokenMint);
+      // I mint nuovi sono spesso Token-2022: getMint legge solo il program indicato.
+      const mint = await getMint(connection, mintKey, undefined, TOKEN_PROGRAM_ID).catch(() =>
+        getMint(connection, mintKey, undefined, TOKEN_2022_PROGRAM_ID),
+      );
       outAmountUi = Number(jupiterResponse.outAmount) / 10 ** mint.decimals;
     } catch {
       outAmountUi = null;

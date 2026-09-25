@@ -24,6 +24,12 @@ export interface RawLaunchEvent {
   snipedWalletsCount: number;
   mintAuthorityRevoked: boolean;
   freezeAuthorityRevoked: boolean;
+  /**
+   * Aspetti che l'adapter NON ha potuto verificare (es. lo storico dei rug del
+   * dev o gli snipe richiedono analisi non ancora implementate): i filtri non
+   * devono presentarli come "puliti".
+   */
+  unverified?: ("dev-history" | "snipes")[];
 }
 
 /** Interfaccia comune per gli adapter di ingest (synthetic, helius-ws, yellowstone-grpc). */

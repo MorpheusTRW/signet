@@ -17,11 +17,15 @@ const RISK_LEVEL_LABELS: Record<RiskReport["level"], string> = {
 
 function devClause(event: RawLaunchEvent): string {
   const { previousRugs } = event.devWalletHistory;
+  if (previousRugs === 0 && event.unverified?.includes("dev-history")) {
+    return "Storico dev non verificato";
+  }
   return previousRugs > 0 ? `Dev con ${previousRugs} rug precedenti` : "Dev pulito";
 }
 
 function snipeClause(event: RawLaunchEvent): string {
   const { snipedWalletsCount } = event;
+  if (event.unverified?.includes("snipes")) return "Snipe non verificati";
   return snipedWalletsCount > 0
     ? `Snipe di ${snipedWalletsCount} wallet`
     : "Nessuno snipe rilevato";

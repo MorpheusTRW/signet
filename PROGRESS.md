@@ -108,7 +108,16 @@
 - **App**: tab Posizioni e Impostazioni (size, slippage, kill switch locale in AsyncStorage, stato del servizio da `/status`). "Approva Entry" ora usa i default salvati e **ricontrolla lato app** kill switch (locale e remoto) e limite del 20% (da `/positions`) prima di costruire la tx (principio 3). Nota: le posizioni mostrate sono quelle simulate del paper trading; in modalità paper l'approvazione non crea una posizione.
 - Verificato: typecheck/lint puliti, 138 test engine. Non ancora provato su Seeker.
 
+- **Adapter `helius-ws`** (`EVENT_SOURCE=helius-ws` + `HELIUS_API_KEY`): rileva le **migrazioni pump.fun → PumpSwap** (pool nuove, quindi instradabili da Jupiter: `/build-swap` funziona end-to-end su token reali).
+  - Fonti verificate (2026-09-25): IDL ufficiali `pump-fun/pump-public-docs` (discriminator/indici account di `create_pool`, layout args). Una fonte terza (blog) indicava un indice account errato per pump `create`: si è usato solo l'IDL ufficiale.
+  - Trigger: `logsSubscribe` (metodo standard, disponibile anche sul piano gratuito) con `mentions` = wallet `withdraw_authority` di pump.fun (`39azUYFW…`), letto on-chain dal campo `withdraw_authority` dell'account Global; compare solo nelle migrate → pochi eventi al minuto invece dell'intero traffico PumpSwap (che avrebbe consumato i crediti WebSocket, 2 crediti/0.1MB). **Se pump.fun ruota quel wallet l'adapter smette di vedere eventi**: rileggere il campo Global.
+  - Solo pool con quote wSOL. Parsing scandisce anche le inner instruction (la migrazione è una CPI): verificato su una tx reale di mainnet, salvata come fixture (`test/ingest/fixtures`).
+  - Arricchimento RPC: authority mint/freeze, top holder (escluso il vault della pool), età wallet dev, nome/simbolo (Token-2022 o Metaplex). Keepalive ping 60s (timeout inattività 10 min) e riconnessione con backoff.
+  - **Non verificati, dichiarati tali**: storico rug/lanci del dev e snipe nei primi blocchi non sono ricostruibili con poche chiamate RPC. Il segnale li marca `unverified` e la sintesi dice "Storico dev non verificato / Snipe non verificati" invece di "Dev pulito / Nessuno snipe" (con +5 punti di rischio prudenziali sul dev). Da implementare con indicizzazione dedicata.
+  - Verificato dal vivo: engine con `helius-ws` ha generato un segnale reale da una migrazione (token Token-2022, liquidità/authority/holder letti da chain) e `POST /build-swap` ha costruito una tx Jupiter valida con fee al tier FREE. Fix collaterale: `outAmountUi` ora legge anche mint Token-2022.
+- Non coperto: lanci nativi PumpSwap non da migrazione, Meteora, Raydium LaunchLab, e la fase in bonding curve di pump.fun.
+
 ### Da fare
-- Adapter `helius-ws` (mint/pool reali), adapter bonding curve pump.fun, build per il dApp Store.
+- Adapter swap per bonding curve pump.fun (Jupiter non la instrada), build per il dApp Store.
 
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).

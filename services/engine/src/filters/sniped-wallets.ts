@@ -8,6 +8,15 @@ const HIGH_SNIPE_COUNT = 20;
 export function checkSnipedWallets(event: RawLaunchEvent): FilterCheck {
   const { snipedWalletsCount } = event;
 
+  if (event.unverified?.includes("snipes")) {
+    return {
+      id: "sniped-wallets",
+      passed: false,
+      reason: "Snipe nei primi blocchi non verificati",
+      riskPoints: 0,
+    };
+  }
+
   if (snipedWalletsCount >= HIGH_SNIPE_COUNT) {
     return {
       id: "sniped-wallets",
