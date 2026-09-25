@@ -117,7 +117,15 @@
   - Verificato dal vivo: engine con `helius-ws` ha generato un segnale reale da una migrazione (token Token-2022, liquidità/authority/holder letti da chain) e `POST /build-swap` ha costruito una tx Jupiter valida con fee al tier FREE. Fix collaterale: `outAmountUi` ora legge anche mint Token-2022.
 - Non coperto: lanci nativi PumpSwap non da migrazione, Meteora, Raydium LaunchLab, e la fase in bonding curve di pump.fun.
 
+- **Build per il dApp Store** (dettagli e passi manuali in `docs/dapp-store/PUBLISHING.md`, fonti verificate 2026-09-25): il flusso ufficiale ora passa dal **Publisher Portal** (KYC/KYB, wallet publisher con ~0,2 SOL, upload ArDrive, mint NFT); il vecchio `config.yaml`/`dapp-store init/create` non è più il percorso attivo.
+  - `plugins/with-release-signing.js` (config plugin): la build release è firmata con la chiave in `~/.seeker-signal/release.jks` (via `apps/mobile/keystore.properties`, gitignored) e **fallisce** se manca — mai più la chiave di debug del template. Compila solo `arm64-v8a` (Seeker): APK da 147 MB → **58 MB**. Conseguenza: gli emulatori x86 non eseguono la build release (la build debug `pnpm android` non è toccata).
+  - `pnpm android:release` = preflight (`scripts/check-release-env.mjs`: keystore presente, `EXPO_PUBLIC_ENGINE_API_URL` https e non locale, salvo `ALLOW_INSECURE_ENGINE_URL=1` per prove locali) + prebuild + `assembleRelease`.
+  - Verificato: APK prodotto, `apksigner` mostra `CN=Seeker Signal` (SHA-256 `a3d90d85…5678`), package `com.seekersignal.app`, versionCode 1, targetSdk 36. **Non installato sul telefono** (la firma differisce dalla build debug: servirebbe disinstallare quella).
+  - Icona: sostituita quella segnaposto di Expo con una generata (onde di segnale verdi su scuro); `docs/dapp-store/assets/icon-512.png`. È un segnaposto grafico: sostituibile con un design vero. Rimossi background/monochrome adattivi (niente alpha verificabile).
+  - Avvertenze "non è consulenza finanziaria" in Impostazioni; bozze di scheda (`LISTING.md`) e privacy policy (`privacy-policy.md`, da rivedere legalmente e pubblicare a un URL).
+  - **Bloccanti prima della submission reale**: engine pubblico in HTTPS (non incluso: serve un deploy), RPC dedicato, privacy policy online, backup della chiave release, valutazione legale (Publisher Policy: servizi finanziari regolati), screenshot dal Seeker.
+
 ### Da fare
-- Adapter swap per bonding curve pump.fun (Jupiter non la instrada), build per il dApp Store.
+- Deploy dell'engine, adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).

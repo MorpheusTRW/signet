@@ -79,6 +79,16 @@ function SettingsForm() {
         </View>
 
         <View style={appStyles.card}>
+          <Text style={appStyles.body}>Avvertenze</Text>
+          <Text style={appStyles.textMuted}>
+            Seeker Signal non è consulenza finanziaria. I segnali sono generati automaticamente da regole sui dati
+            on-chain e non garantiscono alcun risultato: i token appena lanciati sono estremamente rischiosi e puoi
+            perdere l&apos;intero importo. Non gestiamo mai le tue chiavi: ogni operazione è firmata da te dal tuo
+            wallet. Su ogni swap è applicata una fee di piattaforma, mostrata prima della firma.
+          </Text>
+        </View>
+
+        <View style={appStyles.card}>
           <Text style={appStyles.body}>Servizio</Text>
           {status.data ? (
             <>
