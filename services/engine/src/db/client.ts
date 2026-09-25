@@ -98,6 +98,12 @@ CREATE TABLE IF NOT EXISTS push_notifications (
 
 CREATE INDEX IF NOT EXISTS idx_push_notifications_due ON push_notifications(status, scheduled_at);
 CREATE INDEX IF NOT EXISTS idx_push_notifications_device_type_day ON push_notifications(device_id, type, scheduled_at);
+
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 `;
 
 export type DbClient = Database.Database;

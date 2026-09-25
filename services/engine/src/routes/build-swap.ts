@@ -10,6 +10,8 @@ import { resolveTier } from "../entitlements/resolve-tier.js";
 import { remainingExposureSol } from "../paper-trading/engine.js";
 import type { PaperTradingConfig } from "../paper-trading/types.js";
 import { buildVersionedTransaction } from "../swap/build-transaction.js";
+import type { KillSwitch } from "../safety/kill-switch.js";
+import type { RateLimiter } from "../safety/rate-limiter.js";
 import { buildJupiterSwap } from "../swap/jupiter-client.js";
 
 export interface BuildSwapRouteDeps {
@@ -23,6 +25,10 @@ export interface BuildSwapRouteDeps {
   treasuryWalletPubkey: string | undefined;
   jupiterApiBaseUrl: string;
   tradingMode: "paper" | "live";
+  killSwitch: KillSwitch;
+  rateLimiter: RateLimiter;
+  /** Tetto assoluto per singola richiesta, oltre al limite del 20% del portafoglio. */
+  maxSwapSol: number;
 }
 
 export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRouteDeps): void {
@@ -32,6 +38,30 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
       return reply
         .status(400)
         .send({ error: "invalid_body", details: body.error.flatten() });
+    }
+
+    // Il kill switch viene prima di tutto: niente costruzione, niente chiamate esterne.
+    if (deps.killSwitch.isActive()) {
+      request.log.warn({ pubkey: body.data.pubkey }, "build-swap bloccato: kill switch attivo");
+      return reply.status(503).send({
+        error: "kill_switch_active",
+        message: "Trading temporaneamente sospeso.",
+      });
+    }
+
+    if (!deps.rateLimiter.tryAcquire(body.data.pubkey)) {
+      return reply.status(429).send({
+        error: "rate_limited",
+        message: "Troppe richieste, riprova tra un minuto.",
+      });
+    }
+
+    if (body.data.amountSol > deps.maxSwapSol) {
+      return reply.status(409).send({
+        error: "amount_exceeds_cap",
+        message: `Importo massimo per singola operazione: ${deps.maxSwapSol} SOL`,
+        maxSol: deps.maxSwapSol,
+      });
     }
 
     if (!deps.connection || !deps.treasuryWalletPubkey) {
@@ -111,6 +141,17 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
     } catch {
       outAmountUi = null;
     }
+
+    request.log.info(
+      {
+        signalId,
+        pubkey,
+        amountSol,
+        feeBps: limits.platformFeeBps,
+        tradingMode: deps.tradingMode,
+      },
+      "build-swap: tx costruita",
+    );
 
     return reply.status(200).send({
       transactionBase64,

@@ -1,6 +1,7 @@
 import { Connection } from "@solana/web3.js";
 import { createDb } from "./db/client.js";
 import { DevicesRepo } from "./db/devices-repo.js";
+import { SettingsRepo } from "./db/settings-repo.js";
 import { PaperTradesRepo } from "./db/paper-trades-repo.js";
 import { PushNotificationsRepo } from "./db/push-notifications-repo.js";
 import { SignalDeliveriesRepo } from "./db/signal-deliveries-repo.js";
@@ -19,6 +20,8 @@ import { startPushDispatcher } from "./push/dispatcher.js";
 import { scheduleSignalPush } from "./push/schedule-signal-push.js";
 import { createPushSender } from "./push/sender.js";
 import { buildServer } from "./server.js";
+import { KillSwitch } from "./safety/kill-switch.js";
+import { RateLimiter } from "./safety/rate-limiter.js";
 import { processLaunchEvent } from "./signals/pipeline.js";
 
 const env = loadEnv();
@@ -31,6 +34,9 @@ const subscriptionsRepo = new SubscriptionsRepo(db);
 const signalDeliveriesRepo = new SignalDeliveriesRepo(db);
 const trackRecordsRepo = new TrackRecordsRepo(db);
 const pushNotificationsRepo = new PushNotificationsRepo(db);
+
+const killSwitch = new KillSwitch(new SettingsRepo(db), env.KILL_SWITCH);
+const buildSwapRateLimiter = new RateLimiter(env.BUILD_SWAP_RATE_LIMIT_PER_MIN, 60_000);
 
 const paperTradingConfig: PaperTradingConfig = {
   portfolioValueSol: env.PAPER_PORTFOLIO_SOL,
@@ -69,6 +75,8 @@ const app = buildServer(env, {
   resolveTierDeps,
   paperTradesRepo,
   paperTradingConfig,
+  killSwitch,
+  buildSwapRateLimiter,
   buildSwap: {
     connection,
     treasuryWalletPubkey: env.TREASURY_WALLET_PUBKEY,

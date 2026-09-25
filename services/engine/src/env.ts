@@ -44,6 +44,16 @@ const envSchema = z.object({
   // Opzionale: se assente, /build-swap risponde 503 invece di costruire una
   // tx senza un posto dove incassare la fee.
   TREASURY_WALLET_PUBKEY: z.string().optional(),
+
+  // Hardening (F5). KILL_SWITCH=true forza lo stop all'avvio; poi lo stato è
+  // persistito e modificabile a runtime da POST /admin/kill-switch.
+  KILL_SWITCH: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
+  // Chiave per gli endpoint /admin/*. Se assente gli endpoint admin non esistono (404).
+  ADMIN_API_KEY: z.string().min(16).optional(),
+  // Tetto assoluto per singola richiesta /build-swap, indipendente dal limite del 20%.
+  MAX_SWAP_SOL: z.coerce.number().positive().default(5),
+  // Rate limit di /build-swap per wallet (richieste al minuto).
+  BUILD_SWAP_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(10),
 });
 
 export type Env = z.infer<typeof envSchema>;

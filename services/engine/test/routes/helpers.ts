@@ -4,6 +4,9 @@ import { createDb, type DbClient } from "../../src/db/client.js";
 import { buildTierConfig } from "../../src/config/monetization.js";
 import { DevicesRepo } from "../../src/db/devices-repo.js";
 import { PaperTradesRepo } from "../../src/db/paper-trades-repo.js";
+import { SettingsRepo } from "../../src/db/settings-repo.js";
+import { KillSwitch } from "../../src/safety/kill-switch.js";
+import { RateLimiter } from "../../src/safety/rate-limiter.js";
 import { SignalDeliveriesRepo } from "../../src/db/signal-deliveries-repo.js";
 import { SignalsRepo } from "../../src/db/signals-repo.js";
 import { SubscriptionsRepo } from "../../src/db/subscriptions-repo.js";
@@ -25,6 +28,8 @@ export function createTestApp(
   overrides: {
     holderChecker?: HolderChecker;
     paperTradingConfig?: Partial<PaperTradingConfig>;
+    env?: NodeJS.ProcessEnv;
+    rateLimit?: number;
     buildSwap?: {
       connection?: Connection;
       treasuryWalletPubkey?: string;
@@ -42,9 +47,10 @@ export function createTestApp(
   trackRecordsRepo: TrackRecordsRepo;
   paperTradesRepo: PaperTradesRepo;
   resolveTierDeps: ResolveTierDeps;
+  killSwitch: KillSwitch;
 } {
   const db = createDb(":memory:");
-  const env = loadEnv({ NODE_ENV: "test" });
+  const env = loadEnv({ NODE_ENV: "test", ...overrides.env });
 
   const signalsRepo = new SignalsRepo(db);
   const devicesRepo = new DevicesRepo(db);
@@ -66,7 +72,11 @@ export function createTestApp(
     ...overrides.paperTradingConfig,
   };
 
+  const killSwitch = new KillSwitch(new SettingsRepo(db), env.KILL_SWITCH);
+
   const app = buildServer(env, {
+    killSwitch,
+    buildSwapRateLimiter: new RateLimiter(overrides.rateLimit ?? 1000, 60_000),
     signalsRepo,
     devicesRepo,
     signalDeliveriesRepo,
@@ -92,5 +102,6 @@ export function createTestApp(
     trackRecordsRepo,
     paperTradesRepo,
     resolveTierDeps,
+    killSwitch,
   };
 }
