@@ -1,0 +1,13 @@
+**/node_modules
+**/.env
+**/.env.*
+!**/.env.example
+**/*.db
+**/*.db-*
+**/data
+.git
+docs
+# App mobile: serve solo il package.json (per la coerenza del lockfile pnpm).
+apps/mobile/*
+!apps/mobile/package.json
+services/engine/test

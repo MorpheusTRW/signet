@@ -125,7 +125,13 @@
   - Avvertenze "non è consulenza finanziaria" in Impostazioni; bozze di scheda (`LISTING.md`) e privacy policy (`privacy-policy.md`, da rivedere legalmente e pubblicare a un URL).
   - **Bloccanti prima della submission reale**: engine pubblico in HTTPS (non incluso: serve un deploy), RPC dedicato, privacy policy online, backup della chiave release, valutazione legale (Publisher Policy: servizi finanziari regolati), screenshot dal Seeker.
 
+- **Deploy pronto (Fly.io)**, guida in `docs/DEPLOY.md`: `Dockerfile` (install filtrato del solo engine + `pnpm deploy --prod`, runtime con tsx perché `@seeker-signal/shared` è sorgente TS), `.dockerignore`, `fly.toml` (regione ams, 1 GB, volume `/data` per SQLite, sempre acceso, health check `/health`, `TRADING_MODE=paper`), `scripts/fly-secrets.mjs` (segreti dal `.env` via argv, senza shell; RPC di produzione = Helius).
+  - Simulato in locale il flusso del Dockerfile su una copia pulita del repo: install filtrato, `pnpm deploy` e avvio del pacchetto risultante con tsx funzionano (`/health`, `/status`, `/privacy`, arresto pulito su SIGINT). **Non** provato: build dell'immagine vera (niente Docker sul Mac, la fa Fly) e deploy reale (richiede l'account).
+  - Fix: lo script `start` dell'engine puntava a `dist/` che non poteva funzionare (shared è TS): ora usa tsx; `tsx` spostato fra le dipendenze di produzione.
+  - Engine: arresto pulito su SIGINT/SIGTERM, `trustProxy` in produzione, `GET /privacy` (pagina HTML generata con `PRIVACY_CONTROLLER_NAME`/`PRIVACY_CONTACT_EMAIL`; 404 se mancano) — risolve la privacy policy "a un URL" senza hosting separato.
+  - App: tab Debug nascosta nelle build release (`__DEV__`).
+
 ### Da fare
-- Deploy dell'engine, adapter swap per bonding curve pump.fun (Jupiter non la instrada).
+- Deploy reale (account Fly dell'utente), adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).

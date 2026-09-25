@@ -142,6 +142,21 @@ app.addHook("onClose", async () => {
   db.close();
 });
 
+// Fly.io (e Docker) fermano il processo con un segnale: chiudere il server fa
+// scattare onClose, che ferma ingest/dispatcher e chiude SQLite in modo pulito.
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    app.log.info({ signal }, "arresto in corso");
+    app
+      .close()
+      .then(() => process.exit(0))
+      .catch((err: unknown) => {
+        app.log.error(err);
+        process.exit(1);
+      });
+  });
+}
+
 app
   .listen({ port: env.PORT, host: "0.0.0.0" })
   .catch((err: unknown) => {

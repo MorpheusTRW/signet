@@ -18,7 +18,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="track-record" options={{ title: 'Track record' }} />
       <Tabs.Screen name="plans" options={{ title: 'Piani' }} />
       <Tabs.Screen name="settings" options={{ title: 'Impostazioni' }} />
-      <Tabs.Screen name="debug" options={{ title: 'Debug' }} />
+      {/* Solo in sviluppo: firma una tx di prova su mainnet, non va mostrata agli utenti della build release. */}
+      <Tabs.Screen name="debug" options={{ title: 'Debug', href: __DEV__ ? undefined : null }} />
     </Tabs>
   )
 }

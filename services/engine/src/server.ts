@@ -13,6 +13,7 @@ import type { RateLimiter } from "./safety/rate-limiter.js";
 import { registerBuildSwapRoute, type BuildSwapRouteDeps } from "./routes/build-swap.js";
 import { registerDevicesRoutes } from "./routes/devices.js";
 import { registerMeRoutes } from "./routes/me.js";
+import { registerPrivacyRoute } from "./routes/privacy.js";
 import { registerPositionsRoutes } from "./routes/positions.js";
 import { registerSignalsRoutes } from "./routes/signals.js";
 import { registerTrackRecordRoutes } from "./routes/track-record.js";
@@ -35,6 +36,8 @@ export interface ServerDeps {
 
 export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
   const app = Fastify({
+    // In produzione l'engine sta dietro il proxy di Fly.io: l'IP reale del client arriva in X-Forwarded-For.
+    trustProxy: env.NODE_ENV === "production",
     logger: {
       level: env.NODE_ENV === "test" ? "silent" : env.LOG_LEVEL,
       // Mai loggare credenziali: chiave admin e API key dei device.
@@ -43,6 +46,7 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
   });
 
   app.get("/health", async () => ({ status: "ok" }));
+  registerPrivacyRoute(app, env);
 
   registerAdminRoutes(app, {
     killSwitch: deps.killSwitch,

@@ -54,6 +54,12 @@ const envSchema = z.object({
   MAX_SWAP_SOL: z.coerce.number().positive().default(5),
   // Rate limit di /build-swap per wallet (richieste al minuto).
   BUILD_SWAP_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(10),
+
+  // Privacy policy servita su GET /privacy (richiesta dalla Publisher Policy del
+  // dApp Store). Senza entrambi i campi la pagina non viene pubblicata (404).
+  PRIVACY_CONTROLLER_NAME: z.string().optional(),
+  PRIVACY_CONTACT_EMAIL: z.string().email().optional(),
+  PRIVACY_LAST_UPDATED: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

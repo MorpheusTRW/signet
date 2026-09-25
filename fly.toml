@@ -1,0 +1,56 @@
+# Deploy di services/engine su Fly.io. Il nome app è globale su Fly: se è già
+# preso, cambialo qui e in EXPO_PUBLIC_ENGINE_API_URL (https://<app>.fly.dev).
+app = "seeker-signal-engine"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"
+  LOG_LEVEL = "info"
+  DATABASE_PATH = "/data/seeker-signal.db"
+  # Principio 4 di CLAUDE.md: live solo con decisione esplicita.
+  TRADING_MODE = "paper"
+  EVENT_SOURCE = "helius-ws"
+  MAX_PORTFOLIO_EXPOSURE = "0.2"
+  MAX_SWAP_SOL = "5"
+  BUILD_SWAP_RATE_LIMIT_PER_MIN = "10"
+  FREE_SIGNAL_DELAY_SECONDS = "45"
+  FREE_MAX_SIGNALS_PER_DAY = "20"
+  FREE_PLATFORM_FEE_BPS = "75"
+  PRO_PLATFORM_FEE_BPS = "50"
+  HOLDER_PLATFORM_FEE_BPS = "30"
+  HOLDER_MIN_SKR = "10000"
+  # Segreti (FIREBASE_*, HELIUS_API_KEY, SOLANA_RPC_URL, TREASURY_WALLET_PUBKEY,
+  # ADMIN_API_KEY, PRIVACY_*) NON qui: `node scripts/fly-secrets.mjs`.
+
+# SQLite su volume persistente. Con un volume l'app deve avere UNA sola macchina
+# (deploy con --ha=false): il DB non è condiviso fra macchine.
+[[mounts]]
+  source = "engine_data"
+  destination = "/data"
+  initial_size = "1gb"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # Sempre acceso: ingest WebSocket e dispatcher delle push devono girare anche senza richieste HTTP.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "20s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
+
+kill_signal = "SIGINT"
+kill_timeout = 10
