@@ -1,6 +1,7 @@
 # Scheda dApp Store (bozza, in inglese: pubblico internazionale)
 
 **Nome:** Seeker Signal
+**Privacy policy URL:** https://seeker-signal-engine.fly.dev/privacy
 **Short description (max 30 caratteri):** `Solana token signals` (20 caratteri)
 
 **Long description:**
