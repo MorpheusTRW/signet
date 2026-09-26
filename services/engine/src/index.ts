@@ -16,6 +16,7 @@ import { loadEnv } from "./env.js";
 import type { EventSource } from "./ingest/event-source.js";
 import { createRpcCall } from "./ingest/helius/rpc.js";
 import { HeliusEventSource, heliusUrls } from "./ingest/helius/helius-event-source.js";
+import { createEnhancedApi, DailyBudget } from "./ingest/helius/history.js";
 import { SyntheticEventSource } from "./ingest/synthetic-event-source.js";
 import type { PaperTradingConfig } from "./paper-trading/types.js";
 import { startPushDispatcher } from "./push/dispatcher.js";
@@ -108,7 +109,15 @@ function createEventSource(): EventSource {
         throw new Error("EVENT_SOURCE=helius-ws richiede HELIUS_API_KEY");
       }
       const { rpcUrl, wsUrl } = heliusUrls(env.HELIUS_API_KEY);
-      return new HeliusEventSource({ wsUrl, rpc: createRpcCall(rpcUrl), logger: app.log });
+      return new HeliusEventSource({
+        wsUrl,
+        rpc: createRpcCall(rpcUrl),
+        logger: app.log,
+        history: {
+          enhanced: createEnhancedApi(env.HELIUS_API_KEY),
+          budget: new DailyBudget(env.HELIUS_ENHANCED_DAILY_LIMIT),
+        },
+      });
     }
     case "yellowstone-grpc":
       throw new Error(

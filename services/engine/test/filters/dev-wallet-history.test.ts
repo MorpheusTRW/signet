@@ -30,4 +30,34 @@ describe("checkDevWalletHistory", () => {
     expect(result.reason).toBe("Dev con 6 rug precedenti");
     expect(result.riskPoints).toBe(50);
   });
+
+  it("flags a serial launcher (many launches, almost none migrated)", () => {
+    const event = makeRawLaunchEvent({
+      devWalletHistory: { previousLaunches: 26, previousLaunchesMigrated: 1, previousRugs: 0, walletAgeDays: 9 },
+      unverified: ["dev-rugs"],
+    });
+    const result = checkDevWalletHistory(event);
+    expect(result.passed).toBe(false);
+    expect(result.reason).toBe("Dev seriale: almeno 26 lanci precedenti, 1 migrato");
+    expect(result.riskPoints).toBe(25);
+  });
+
+  it("flags a dev with a few launches and none migrated", () => {
+    const event = makeRawLaunchEvent({
+      devWalletHistory: { previousLaunches: 4, previousLaunchesMigrated: 0, previousRugs: 0, walletAgeDays: 60 },
+      unverified: ["dev-rugs"],
+    });
+    expect(checkDevWalletHistory(event).riskPoints).toBe(12);
+  });
+
+  it("does not call a dev clean when rugs are unverified", () => {
+    const event = makeRawLaunchEvent({
+      devWalletHistory: { previousLaunches: 2, previousLaunchesMigrated: 1, previousRugs: 0, walletAgeDays: 60 },
+      unverified: ["dev-rugs"],
+    });
+    const result = checkDevWalletHistory(event);
+    expect(result.passed).toBe(false);
+    expect(result.reason).toContain("non verificato");
+    expect(result.riskPoints).toBe(5);
+  });
 });

@@ -133,7 +133,14 @@
 
 - **Deploy reale fatto (2026-09-26)**: app Fly `seeker-signal-engine` (org personal, ams), volume `engine_data` 1 GB cifrato con snapshot, 7 segreti caricati, immagine 75 MB. Verificato: `https://seeker-signal-engine.fly.dev/health` ok, `/status` paper + kill switch spento, health check Fly passing, log "helius-ws connesso". `/privacy` online (https://seeker-signal-engine.fly.dev/privacy) con i dati del titolare forniti dall'utente. APK release ricostruito con l'URL pubblico (verificato nel bundle Hermes: presente `seeker-signal-engine.fly.dev`, assente l'IP LAN).
 
+- **Snipe e lanci del dev verificati** (`src/ingest/helius/history.ts`), via Helius Enhanced Transactions API (100 crediti/chiamata, 2 per segnale; verificata dal vivo 2026-09-26):
+  - Snipe: prime 40 tx della bonding curve in ordine crescente (`sort-order=asc`); si contano i wallet distinti (escluso il dev) che ricevono il token dalla bonding curve entro 3 slot dalla creazione. Si usa il destinatario e non il fee payer (i bot pagano da wallet diversi). PDA bonding curve dai seed dell'IDL, verificato identico all'indirizzo reale.
+  - Dev: tx `type=CREATE` del creatore con `lt-slot` = slot di creazione del token (solo lanci precedenti) + flag `complete` delle loro bonding curve (`getMultipleAccounts`, offset 48 da IDL) per contare i migrati. Scartato `getProgramAccounts` per creatore: pump.fun ha >10M account, Helius lo rifiuta. **Il conteggio è un minimo** (l'API filtra per tipo su una finestra di tx): la sintesi dice "almeno N".
+  - Nuove regole di rischio: dev seriale (≥10 lanci, <10% migrati: +25), dev con ≥3 lanci e 0 migrati (+12). I **rug** restano non verificati (`dev-rugs`, +5 prudenziali): nessuna definizione affidabile on-chain.
+  - Tetto `HELIUS_ENHANCED_DAILY_LIMIT` (default 200 chiamate/giorno ≈ max 600k crediti/mese): oltre, quegli aspetti tornano "non verificati" fino al giorno dopo.
+  - Verificato dal vivo su una migrazione reale: "Dev con almeno 26 lanci, 1 migrato. Snipe di 1 wallet. Rischio: Medio." in ~1,8 s.
+
 ### Da fare
-- Installare l'APK release sul Seeker; adapter swap per bonding curve pump.fun (Jupiter non la instrada).
+- Adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).

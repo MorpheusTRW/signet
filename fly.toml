@@ -14,6 +14,8 @@ primary_region = "ams"
   # Principio 4 di CLAUDE.md: live solo con decisione esplicita.
   TRADING_MODE = "paper"
   EVENT_SOURCE = "helius-ws"
+  # 2 chiamate da 100 crediti per segnale: 200/giorno = max ~600k crediti/mese (piano gratuito: 1M)
+  HELIUS_ENHANCED_DAILY_LIMIT = "200"
   MAX_PORTFOLIO_EXPOSURE = "0.2"
   MAX_SWAP_SOL = "5"
   BUILD_SWAP_RATE_LIMIT_PER_MIN = "10"

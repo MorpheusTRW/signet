@@ -16,11 +16,16 @@ const RISK_LEVEL_LABELS: Record<RiskReport["level"], string> = {
 };
 
 function devClause(event: RawLaunchEvent): string {
-  const { previousRugs } = event.devWalletHistory;
-  if (previousRugs === 0 && event.unverified?.includes("dev-history")) {
-    return "Storico dev non verificato";
+  const { previousRugs, previousLaunches, previousLaunchesMigrated } = event.devWalletHistory;
+  if (previousRugs > 0) return `Dev con ${previousRugs} rug precedenti`;
+  if (event.unverified?.includes("dev-launches")) return "Storico dev non verificato";
+  if (previousLaunchesMigrated !== undefined) {
+    if (previousLaunches === 0) return "Nessun lancio precedente del dev trovato";
+    const migrated = previousLaunchesMigrated === 1 ? "1 migrato" : `${previousLaunchesMigrated} migrati`;
+    return `Dev con almeno ${previousLaunches} lanci, ${migrated}`;
   }
-  return previousRugs > 0 ? `Dev con ${previousRugs} rug precedenti` : "Dev pulito";
+  if (event.unverified?.includes("dev-rugs")) return "Storico dev non verificato";
+  return "Dev pulito";
 }
 
 function snipeClause(event: RawLaunchEvent): string {

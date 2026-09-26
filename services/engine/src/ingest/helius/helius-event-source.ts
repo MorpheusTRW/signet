@@ -1,6 +1,7 @@
 import WebSocket from "ws";
-import type { EventSource, RawLaunchEvent } from "../event-source.js";
+import type { EventSource, RawLaunchEvent, UnverifiedAspect } from "../event-source.js";
 import { fetchMintInfo, fetchTopHolderPercentages, fetchWalletAgeDays } from "./enrich.js";
+import { type DailyBudget, type EnhancedApi, fetchTokenHistory, type TokenHistory } from "./history.js";
 import { parseCreatePool, type RawTransaction } from "./parse-create-pool.js";
 import type { RpcCall } from "./rpc.js";
 
@@ -29,6 +30,8 @@ export interface HeliusEventSourceOptions {
   wsUrl: string;
   rpc: RpcCall;
   logger: Logger;
+  /** Storico snipe/dev (Enhanced Transactions). Se assente, quegli aspetti restano non verificati. */
+  history?: { enhanced: EnhancedApi; budget: DailyBudget };
   /** Iniettabili nei test. */
   createWebSocket?: (url: string) => WebSocket;
   sleep?: (ms: number) => Promise<void>;
@@ -169,10 +172,22 @@ export class HeliusEventSource implements EventSource {
       return null;
     }
 
-    const [topHolderPercentages, walletAgeDays] = await Promise.all([
+    const [topHolderPercentages, walletAgeDays, history] = await Promise.all([
       fetchTopHolderPercentages(rpc, pool.tokenMint, mint.supplyRaw, [pool.poolBaseVault]),
       fetchWalletAgeDays(rpc, pool.coinCreator, this.now() / 1000),
+      this.options.history
+        ? fetchTokenHistory(
+            { ...this.options.history, rpc },
+            { mint: pool.tokenMint, creator: pool.coinCreator },
+          ).catch((): TokenHistory => ({}))
+        : Promise.resolve<TokenHistory>({}),
     ]);
+    const { snipers, previousLaunches, previousLaunchesMigrated } = history;
+
+    // I rug precedenti non sono ricostruibili in modo affidabile: sempre "non verificati".
+    const unverified: UnverifiedAspect[] = ["dev-rugs"];
+    if (previousLaunches === undefined) unverified.push("dev-launches");
+    if (snipers === undefined) unverified.push("snipes");
 
     return {
       id: signature,
@@ -184,13 +199,16 @@ export class HeliusEventSource implements EventSource {
       createdAt: new Date((pool.blockTime ?? this.now() / 1000) * 1000).toISOString(),
       initialLiquiditySol: pool.initialLiquiditySol,
       topHolderPercentages,
-      // previousLaunches/previousRugs non sono ricostruibili con poche chiamate RPC:
-      // restano a 0 ma il segnale è marcato "non verificato" (vedi `unverified`).
-      devWalletHistory: { previousLaunches: 0, previousRugs: 0, walletAgeDays },
-      snipedWalletsCount: 0,
+      devWalletHistory: {
+        previousLaunches: previousLaunches ?? 0,
+        ...(previousLaunchesMigrated !== undefined && { previousLaunchesMigrated }),
+        previousRugs: 0,
+        walletAgeDays,
+      },
+      snipedWalletsCount: snipers ?? 0,
       mintAuthorityRevoked: mint.mintAuthorityRevoked,
       freezeAuthorityRevoked: mint.freezeAuthorityRevoked,
-      unverified: ["dev-history", "snipes"],
+      unverified,
     };
   }
 }

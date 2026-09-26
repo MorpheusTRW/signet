@@ -11,6 +11,10 @@ const envSchema = z.object({
     .enum(["synthetic", "helius-ws", "yellowstone-grpc"])
     .default("synthetic"),
   HELIUS_API_KEY: z.string().optional(),
+  // Tetto giornaliero di chiamate Enhanced Transactions (100 crediti l'una, 2 per segnale):
+  // 200 = max ~20k crediti/giorno, dentro il piano gratuito da 1M/mese. Oltre, snipe e
+  // storico dev restano "non verificati" fino al giorno dopo.
+  HELIUS_ENHANCED_DAILY_LIMIT: z.coerce.number().int().nonnegative().default(200),
   JUPITER_API_BASE_URL: z.string().default("https://api.jup.ag"),
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),

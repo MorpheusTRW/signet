@@ -45,4 +45,16 @@ describe("buildSummary", () => {
       "Nuova pool Raydium LaunchLab. Dev con 4 rug precedenti. Nessuno snipe rilevato. Rischio: Alto.",
     );
   });
+
+  it("reports the dev launch history found on-chain", () => {
+    const event = makeRawLaunchEvent({
+      program: "pumpswap",
+      devWalletHistory: { previousLaunches: 26, previousLaunchesMigrated: 1, previousRugs: 0, walletAgeDays: 9 },
+      snipedWalletsCount: 1,
+      unverified: ["dev-rugs"],
+    });
+    expect(buildSummary(event, { score: 60, level: "medium", reasons: [] })).toBe(
+      "Nuova pool PumpSwap. Dev con almeno 26 lanci, 1 migrato. Snipe di 1 wallet. Rischio: Medio.",
+    );
+  });
 });

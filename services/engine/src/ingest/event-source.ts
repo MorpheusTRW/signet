@@ -2,10 +2,20 @@ import type { SourceProgram } from "@seeker-signal/shared";
 
 /** Storico del wallet dev, come ricostruito dall'ingest (analisi on-chain o dati sintetici). */
 export interface DevWalletHistory {
+  /** Lanci precedenti trovati (con l'adapter on-chain è un minimo, non un conteggio completo). */
   previousLaunches: number;
+  /** Quanti dei lanci trovati sono migrati fuori dalla bonding curve; undefined se non letto. */
+  previousLaunchesMigrated?: number;
   previousRugs: number;
   walletAgeDays: number;
 }
+
+/**
+ * - dev-launches: lanci precedenti del dev non letti
+ * - dev-rugs: quanti lanci precedenti erano rug (non ricostruibile in modo affidabile)
+ * - snipes: acquisti nei primi blocchi non letti
+ */
+export type UnverifiedAspect = "dev-launches" | "dev-rugs" | "snipes";
 
 /** Evento di lancio grezzo prodotto da un adapter di ingest, prima dei filtri. */
 export interface RawLaunchEvent {
@@ -29,7 +39,7 @@ export interface RawLaunchEvent {
    * dev o gli snipe richiedono analisi non ancora implementate): i filtri non
    * devono presentarli come "puliti".
    */
-  unverified?: ("dev-history" | "snipes")[];
+  unverified?: UnverifiedAspect[];
 }
 
 /** Interfaccia comune per gli adapter di ingest (synthetic, helius-ws, yellowstone-grpc). */
