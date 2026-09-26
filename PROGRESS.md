@@ -131,7 +131,9 @@
   - Engine: arresto pulito su SIGINT/SIGTERM, `trustProxy` in produzione, `GET /privacy` (pagina HTML generata con `PRIVACY_CONTROLLER_NAME`/`PRIVACY_CONTACT_EMAIL`; 404 se mancano) — risolve la privacy policy "a un URL" senza hosting separato.
   - App: tab Debug nascosta nelle build release (`__DEV__`).
 
+- **Deploy reale fatto (2026-09-26)**: app Fly `seeker-signal-engine` (org personal, ams), volume `engine_data` 1 GB cifrato con snapshot, 7 segreti caricati, immagine 75 MB. Verificato: `https://seeker-signal-engine.fly.dev/health` ok, `/status` paper + kill switch spento, health check Fly passing, log "helius-ws connesso". `/privacy` 404 finché mancano i dati del titolare. APK release ricostruito con l'URL pubblico (verificato nel bundle Hermes: presente `seeker-signal-engine.fly.dev`, assente l'IP LAN).
+
 ### Da fare
-- Deploy reale (account Fly dell'utente), adapter swap per bonding curve pump.fun (Jupiter non la instrada).
+- Installare l'APK release sul Seeker; dati del titolare per `/privacy`; adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).
