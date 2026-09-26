@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { ScrollView, Text, TextInput, View } from 'react-native'
+import { Linking, ScrollView, Text, TextInput, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import type { RiskLevel } from '@seeker-signal/shared'
 import { AppActionButton } from '@/components/app-action-button'
 import { appStyles, colors } from '@/constants/app-styles'
 import { getSignal } from '@/lib/api/client'
+import { launchPage } from '@/lib/launch-page'
 import { useSettings } from '@/lib/settings/settings'
 
 const RISK_LABELS: Record<RiskLevel, string> = { low: 'Basso', medium: 'Medio', high: 'Alto' }
@@ -58,6 +59,12 @@ export default function SignalDetailScreen() {
         <Text style={appStyles.subtitle}>
           {signal.program} · {signal.tokenMint}
         </Text>
+        <AppActionButton
+          title={launchPage(signal).label}
+          onPress={async () => {
+            await Linking.openURL(launchPage(signal).url)
+          }}
+        />
 
         <View style={appStyles.card}>
           <Text style={[appStyles.body, { color: riskColor, fontWeight: '700' }]}>
