@@ -5,16 +5,23 @@ import type { Cache } from '@wallet-ui/react-native-web3js'
 const DEFAULT_STORAGE_KEY = 'authorization-cache'
 
 /**
- * Ricostruisce i campi `publicKey` in istanze `PublicKey` dopo JSON.parse.
- * Replica esattamente il `cacheReviver` interno di
- * `@wallet-ui/react-native-web3js` (non esportato pubblicamente), così la
- * cache resta compatibile col resto della libreria: senza questo, il
- * `WalletAuthorization` letto da secure-store avrebbe `publicKey` come
- * stringa invece che come `PublicKey`.
+ * Ricostruisce in istanze `PublicKey` i campi che la libreria salva come
+ * PublicKey (serializzati da JSON.stringify come stringa base58).
+ *
+ * Il `cacheReviver` interno di `@wallet-ui/react-native-web3js` ricostruisce
+ * solo `publicKey`, ma l'account salvato ha anche `address`, sempre una
+ * PublicKey (`getAccountFromAuthorizedAccount`). Senza questo, alla riapertura
+ * dell'app `account.address` è una stringa e `account.address.toBase58()`
+ * manda in crash l'avvio (bug riprodotto sul Seeker il 2026-09-26).
+ * `addressBase64` resta stringa: è un campo diverso.
  */
 function cacheReviver(key: string, value: unknown): unknown {
-  if (key === 'publicKey' && typeof value === 'string') {
-    return new PublicKey(value)
+  if ((key === 'publicKey' || key === 'address') && typeof value === 'string') {
+    try {
+      return new PublicKey(value)
+    } catch {
+      return value
+    }
   }
   return value
 }
