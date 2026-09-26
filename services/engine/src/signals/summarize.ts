@@ -36,6 +36,18 @@ function snipeClause(event: RawLaunchEvent): string {
     : "Nessuno snipe rilevato";
 }
 
+/** I fattori di rischio più forti emersi dal backtest vanno in testa alla sintesi. */
+function launchClauses(event: RawLaunchEvent): string[] {
+  const clauses: string[] = [];
+  if (event.launch && event.launch.minutesToMigrate <= 2) {
+    clauses.push(`Migrato ${event.launch.minutesToMigrate} min dopo il lancio.`);
+  }
+  if (event.launch && event.launch.bundlePct >= 10) {
+    clauses.push(`Bundle ${event.launch.bundlePct}% al lancio.`);
+  }
+  return clauses;
+}
+
 /**
  * Sintesi deterministica da template (nessun LLM nel percorso critico), es.:
  * "Nuova pool Meteora. Dev pulito. Snipe di 3 wallet. Rischio: Basso."
@@ -49,6 +61,7 @@ export function buildSummary(
 
   return [
     `Nuova pool ${programLabel}.`,
+    ...launchClauses(event),
     `${devClause(event)}.`,
     `${snipeClause(event)}.`,
     `Rischio: ${riskLabel}.`,

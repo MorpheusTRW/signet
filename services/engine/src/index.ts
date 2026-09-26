@@ -140,6 +140,7 @@ eventSource.start((event) => {
     pushNotificationsRepo,
     signalDeliveriesRepo,
     resolveTierDeps,
+    pushHighRisk: env.PUSH_HIGH_RISK_SIGNALS,
   }).catch((error: unknown) => {
     app.log.warn({ err: error }, "scheduleSignalPush fallito");
   });

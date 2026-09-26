@@ -4,6 +4,13 @@ import { checkAuthorities } from "./authorities.js";
 import { checkDevWalletHistory } from "./dev-wallet-history.js";
 import { checkInitialLiquidity } from "./initial-liquidity.js";
 import { checkSnipedWallets } from "./sniped-wallets.js";
+import {
+  checkAnomalousMigration,
+  checkBundle,
+  checkDevBuy,
+  checkFreshDevWallet,
+  checkMigrationSpeed,
+} from "./launch-pattern.js";
 import { checkTopHolderConcentration } from "./top-holder-concentration.js";
 import type { FilterCheck } from "./types.js";
 
@@ -16,6 +23,11 @@ export const RISK_FILTERS: ((event: RawLaunchEvent) => FilterCheck)[] = [
   checkInitialLiquidity,
   checkSnipedWallets,
   checkAuthorities,
+  checkAnomalousMigration,
+  checkMigrationSpeed,
+  checkDevBuy,
+  checkBundle,
+  checkFreshDevWallet,
 ];
 
 export function computeRiskReport(event: RawLaunchEvent): RiskReport {

@@ -14,8 +14,26 @@ export interface DevWalletHistory {
  * - dev-launches: lanci precedenti del dev non letti
  * - dev-rugs: quanti lanci precedenti erano rug (non ricostruibile in modo affidabile)
  * - snipes: acquisti nei primi blocchi non letti
+ * - holders: distribuzione dei top holder non letta
  */
-export type UnverifiedAspect = "dev-launches" | "dev-rugs" | "snipes";
+export type UnverifiedAspect = "dev-launches" | "dev-rugs" | "snipes" | "holders";
+
+/** Come è avvenuto il lancio su pump.fun (dalle prime tx della bonding curve). */
+export interface LaunchPattern {
+  /** Minuti fra la creazione del token e la migrazione. */
+  minutesToMigrate: number;
+  /** Wallet (escluso il dev) che comprano nello stesso slot della creazione, e la loro % di supply. */
+  bundleWallets: number;
+  bundlePct: number;
+  /** % supply comprata dal dev nello slot di creazione. */
+  devBuyPct: number;
+  /** % supply comprata dagli sniper nei primi blocchi. */
+  snipersPct: number;
+  /** Acquirenti iniziali con le fee pagate da un altro wallet (stesso operatore). */
+  linkedWallets: number;
+  /** Minuti fra la prima attività del wallet dev e il lancio; null se sconosciuto. */
+  devFundedMinutesBeforeLaunch: number | null;
+}
 
 /** Evento di lancio grezzo prodotto da un adapter di ingest, prima dei filtri. */
 export interface RawLaunchEvent {
@@ -40,6 +58,9 @@ export interface RawLaunchEvent {
    * devono presentarli come "puliti".
    */
   unverified?: UnverifiedAspect[];
+  /** true se l'evento è una migrazione pump.fun → PumpSwap reale (liquidità attesa ~85 SOL). */
+  pumpMigration?: boolean;
+  launch?: LaunchPattern;
 }
 
 /** Interfaccia comune per gli adapter di ingest (synthetic, helius-ws, yellowstone-grpc). */

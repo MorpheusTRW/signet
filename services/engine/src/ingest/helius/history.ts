@@ -16,6 +16,8 @@ export interface EnhancedTransaction {
   type: string;
   source: string;
   feePayer: string;
+  /** Unix seconds. */
+  timestamp?: number;
   transactionError: unknown;
   tokenTransfers: {
     fromUserAccount: string | null;
@@ -55,38 +57,71 @@ export function bondingCurveAddress(mint: string): string {
 export const SNIPE_WINDOW_SLOTS = 3;
 const FIRST_TXS_LIMIT = 40;
 
-export interface SnipeAnalysis {
+export interface LaunchAnalysis {
   createSlot: number;
+  /** Unix seconds della tx di creazione. */
+  createTime: number;
+  /** Wallet distinti (escluso il dev) che ricevono il token entro SNIPE_WINDOW_SLOTS. */
   snipers: number;
+  /** % supply comprata dagli sniper (escluso il dev) entro SNIPE_WINDOW_SLOTS. */
+  snipersPct: number;
+  /** Wallet (escluso il dev) che comprano nello STESSO slot della creazione: solo un bundle concordato col dev ci riesce. */
+  bundleWallets: number;
+  bundlePct: number;
+  /** % supply ricevuta dal dev nello slot di creazione (dev buy). */
+  devBuyPct: number;
+  /** Destinatari degli acquisti iniziali la cui fee è pagata da un altro wallet (stesso operatore dietro più wallet). */
+  linkedWallets: number;
+  /** Destinatari degli acquisti iniziali (escluso il dev): servono per controllare quanto detengono ancora. */
+  earlyBuyers: string[];
 }
 
 /**
- * Wallet distinti (escluso il dev) che hanno ricevuto il token dalla bonding curve
- * entro SNIPE_WINDOW_SLOTS dalla creazione. Si usa il destinatario del token e non
- * il fee payer: i bot pagano spesso le fee da un wallet diverso da quello che riceve.
- * Pura: `txs` sono le prime transazioni della bonding curve in ordine crescente.
+ * Metriche del lancio dalle prime tx della bonding curve (ordine crescente).
+ * Si usa il destinatario del token e non il fee payer: i bot pagano spesso le fee da
+ * un wallet diverso da quello che riceve (e questo stesso fatto li collega fra loro).
+ * Pura, testata su dati reali.
  */
-export function analyzeSnipes(
+export function analyzeLaunch(
   txs: EnhancedTransaction[],
-  params: { mint: string; bondingCurve: string; creator: string },
-): SnipeAnalysis | null {
+  params: { mint: string; bondingCurve: string; creator: string; supply: number },
+): LaunchAnalysis | null {
   const create = txs.find((tx) => tx.type === "CREATE" && !tx.transactionError);
-  if (!create) return null;
-  const buyers = new Set<string>();
+  if (!create || params.supply <= 0) return null;
+
+  const early = new Map<string, number>();
+  const bundle = new Map<string, number>();
+  const linked = new Set<string>();
+  let devBuy = 0;
+
   for (const tx of txs) {
     if (tx.transactionError || tx.slot > create.slot + SNIPE_WINDOW_SLOTS) continue;
     for (const transfer of tx.tokenTransfers) {
-      if (
-        transfer.mint === params.mint &&
-        transfer.fromUserAccount === params.bondingCurve &&
-        transfer.toUserAccount &&
-        transfer.toUserAccount !== params.creator
-      ) {
-        buyers.add(transfer.toUserAccount);
+      const to = transfer.toUserAccount;
+      if (transfer.mint !== params.mint || transfer.fromUserAccount !== params.bondingCurve || !to) continue;
+      if (to === params.creator) {
+        if (tx.slot === create.slot) devBuy += transfer.tokenAmount;
+        continue;
       }
+      early.set(to, (early.get(to) ?? 0) + transfer.tokenAmount);
+      if (tx.slot === create.slot) bundle.set(to, (bundle.get(to) ?? 0) + transfer.tokenAmount);
+      if (tx.feePayer !== to) linked.add(to);
     }
   }
-  return { createSlot: create.slot, snipers: buyers.size };
+
+  const pct = (amount: number) => Number(((amount / params.supply) * 100).toFixed(2));
+  const sum = (m: Map<string, number>) => [...m.values()].reduce((a, b) => a + b, 0);
+  return {
+    createSlot: create.slot,
+    createTime: create.timestamp ?? 0,
+    snipers: early.size,
+    snipersPct: pct(sum(early)),
+    bundleWallets: bundle.size,
+    bundlePct: pct(sum(bundle)),
+    devBuyPct: pct(devBuy),
+    linkedWallets: linked.size,
+    earlyBuyers: [...early.keys()],
+  };
 }
 
 /** Mint creati dal dev nelle tx CREATE di pump.fun (il token che il dev riceve dalla sua bonding curve). */
@@ -137,47 +172,47 @@ export class DailyBudget {
 }
 
 export interface TokenHistory {
-  snipers?: number;
+  launch?: LaunchAnalysis;
   previousLaunches?: number;
   previousLaunchesMigrated?: number;
 }
 
 /**
- * Snipe + lanci precedenti del dev (solo quelli creati prima di questo token).
+ * Analisi del lancio + lanci precedenti del dev (solo quelli creati prima di questo token).
  * Ogni parte che fallisce resta semplicemente assente: il chiamante la marca "non verificata".
  * I lanci trovati sono un minimo: l'API filtra per tipo su una finestra di tx e può
  * restituire meno risultati di quelli esistenti.
  */
 export async function fetchTokenHistory(
   deps: { enhanced: EnhancedApi; rpc: RpcCall; budget: DailyBudget },
-  params: { mint: string; creator: string },
+  params: { mint: string; creator: string; supply: number },
 ): Promise<TokenHistory> {
   if (!deps.budget.tryConsume(2)) return {};
   const bondingCurve = bondingCurveAddress(params.mint);
 
-  let snipes: SnipeAnalysis | null = null;
+  let launch: LaunchAnalysis | null = null;
   try {
     const firstTxs = await deps.enhanced(bondingCurve, {
       "sort-order": "asc",
       limit: String(FIRST_TXS_LIMIT),
     });
-    snipes = analyzeSnipes(firstTxs, { ...params, bondingCurve });
+    launch = analyzeLaunch(firstTxs, { ...params, bondingCurve });
   } catch {
-    snipes = null;
+    launch = null;
   }
   // Senza lo slot di creazione non si possono separare i lanci precedenti da questo.
-  if (!snipes) return {};
+  if (!launch) return {};
 
   try {
     const creates = await deps.enhanced(params.creator, {
       type: "CREATE",
       limit: "100",
-      "lt-slot": String(snipes.createSlot),
+      "lt-slot": String(launch.createSlot),
     });
     const mints = launchedMints(creates, params.creator).filter((m) => m !== params.mint);
     const migrated = await countMigrated(deps.rpc, mints);
-    return { snipers: snipes.snipers, previousLaunches: mints.length, previousLaunchesMigrated: migrated };
+    return { launch, previousLaunches: mints.length, previousLaunchesMigrated: migrated };
   } catch {
-    return { snipers: snipes.snipers };
+    return { launch };
   }
 }

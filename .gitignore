@@ -11,3 +11,6 @@ coverage/
 *.db-shm
 *.db-wal
 *.sqlite
+
+# Backtest dei filtri (rigenerabile con scripts/backtest-migrations.ts)
+services/engine/data/backtest.json

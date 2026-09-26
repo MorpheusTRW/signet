@@ -157,4 +157,17 @@ describe("scheduleSignalPush", () => {
 
     expect(ctx.pushNotificationsRepo.list()).toHaveLength(2);
   });
+
+  it("non invia push per i segnali ad alto rischio (salvo pushHighRisk)", async () => {
+    const ctx = setup(true);
+    db = ctx.db;
+    const inserted = ctx.insertSignal();
+    const signal = { ...inserted, riskReport: { score: 90, level: "high" as const, reasons: ["x"] } };
+
+    await scheduleSignalPush(signal, ctx.deps, NOW);
+    expect(ctx.pushNotificationsRepo.list()).toHaveLength(0);
+
+    await scheduleSignalPush(signal, { ...ctx.deps, pushHighRisk: true }, NOW);
+    expect(ctx.pushNotificationsRepo.list()).toHaveLength(1);
+  });
 });

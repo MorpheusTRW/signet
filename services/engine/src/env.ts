@@ -43,6 +43,8 @@ const envSchema = z.object({
 
   // Push FCM (F3): intervallo di polling delle notifiche pianificate e dovute.
   PUSH_DISPATCH_INTERVAL_MS: z.coerce.number().int().positive().default(5000),
+  // I segnali ad alto rischio restano nel feed; con "true" generano anche la push.
+  PUSH_HIGH_RISK_SIGNALS: z.enum(["true", "false"]).default("false").transform((v) => v === "true"),
 
   // /build-swap (F4): wallet che incassa la platform fee (come ATA wSOL).
   // Opzionale: se assente, /build-swap risponde 503 invece di costruire una

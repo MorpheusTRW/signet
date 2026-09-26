@@ -29,6 +29,7 @@ export interface MintInfo {
   mintAuthorityRevoked: boolean;
   freezeAuthorityRevoked: boolean;
   supplyRaw: bigint;
+  decimals: number;
   /** Nome/simbolo se leggibili (estensione Token-2022 o metadata Metaplex), altrimenti undefined. */
   name?: string;
   symbol?: string;
@@ -58,6 +59,7 @@ export async function fetchMintInfo(rpc: RpcCall, mint: string): Promise<MintInf
     mintAuthorityRevoked: info.mintAuthority === null,
     freezeAuthorityRevoked: info.freezeAuthority === null,
     supplyRaw: BigInt(info.supply),
+    decimals: info.decimals,
     ...(name !== undefined && { name }),
     ...(symbol !== undefined && { symbol }),
   };
@@ -116,18 +118,13 @@ export async function fetchTopHolderPercentages(
 }
 
 /**
- * Età del wallet dev in giorni, dalla firma più vecchia trovata (fino a
- * MAX_SIGNATURE_PAGES*1000 firme: oltre quella soglia il wallet è comunque
- * molto attivo e l'età trovata è un limite inferiore già affidabile).
- * Ritorna 0 se il wallet non ha storico.
+ * Unix seconds della firma più vecchia del wallet (fino a MAX_SIGNATURE_PAGES*1000
+ * firme: oltre quella soglia il wallet è comunque molto attivo e il valore trovato è
+ * un limite superiore già affidabile). null se il wallet non ha storico.
  */
-export async function fetchWalletAgeDays(
-  rpc: RpcCall,
-  wallet: string,
-  nowSeconds: number,
-): Promise<number> {
+export async function fetchWalletFirstSeen(rpc: RpcCall, wallet: string): Promise<number | null> {
   let before: string | undefined;
-  let oldestBlockTime: number | null | undefined;
+  let oldestBlockTime: number | null = null;
   for (let page = 0; page < MAX_SIGNATURE_PAGES; page++) {
     const signatures = await rpc<{ signature: string; blockTime: number | null }[]>(
       "getSignaturesForAddress",
@@ -139,6 +136,10 @@ export async function fetchWalletAgeDays(
     before = last.signature;
     if (signatures.length < SIGNATURES_PAGE) break;
   }
-  if (oldestBlockTime == null) return 0;
-  return Math.max(0, Math.floor((nowSeconds - oldestBlockTime) / SECONDS_PER_DAY));
+  return oldestBlockTime;
+}
+
+export function walletAgeDays(firstSeen: number | null, nowSeconds: number): number {
+  if (firstSeen === null) return 0;
+  return Math.max(0, Math.floor((nowSeconds - firstSeen) / SECONDS_PER_DAY));
 }

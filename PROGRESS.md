@@ -140,7 +140,16 @@
   - Tetto `HELIUS_ENHANCED_DAILY_LIMIT` (default 200 chiamate/giorno ≈ max 600k crediti/mese): oltre, quegli aspetti tornano "non verificati" fino al giorno dopo.
   - Verificato dal vivo su una migrazione reale: "Dev con almeno 26 lanci, 1 migrato. Snipe di 1 wallet. Rischio: Medio." in ~1,8 s.
 
+- **Filtri anti-rug ricalibrati su dati reali (2026-09-26)**, dopo un segnale "Rischio: Basso" ruggato in 2 minuti.
+  - Analisi forense dei segnali recenti: i rug avevano wallet dev ricaricato 0–1 s prima del lancio e 16–24% della supply comprata da altri wallet **nello stesso blocco della creazione** (bundle: possibile solo in accordo col dev), con fee pagate da wallet comuni.
+  - Ricerca (GMGN, guide anti-rug): metriche standard bundler/insider/sniper/dev %/top10/fresh wallet; default GMGN: bundler 10%, sniper 10%, insider 5%, dev e top10 30%. Twitter/X non è consultabile senza login: usate guide pubbliche e i thread indicizzati.
+  - **Backtest** (`scripts/backtest-migrations.ts`, 49 migrazioni reali con esito a 1,5–2,5 h via DexScreener): **82% perde oltre l'80%**, solo 2 rialzi. Pattern: migrazione entro ~1 min dal lancio (21 rug su 22), "migrazioni" con liquidità molto sotto gli ~85 SOL (13 su 13), dev buy >50%, dev seriali (tutti rug). Il bundle % da solo non separa bene i token "organici" (campione piccolo).
+  - Nuovi filtri (`src/filters/launch-pattern.ts`): migrazione anomala (+70), migrazione istantanea ≤2 min (+70), dev buy ≥50% (+50) / ≥20% (+15), bundle ≥30% (+30) / ≥10% (+15) / ≥3 wallet collegati (+10), wallet dev attivato <60 min prima (+15); dev seriale 25→50. Risultato sul backtest: "Alto" su 35 dei 40 rug; fra i non-Alto 5 rug su 12. **Anche i non-rug hanno perso quasi tutti il 50–70%**: i filtri evitano i rug peggiori, non trovano token vincenti.
+  - I segnali ad alto rischio non generano più push (`PUSH_HIGH_RISK_SIGNALS=false`), restano nel feed.
+  - Fix: `getTransaction` con `maxSupportedTransactionVersion: 1` (Solana ha introdotto tx v1, stessa struttura json); `getTokenLargestAccounts` che fallisce non scarta più il segnale (holder "non verificati").
+- **Fly.io in trial**: senza carta registrata le macchine si fermano dopo 5 minuti (log: "Trial machine stopping"). Il server ha quindi perso quasi tutte le migrazioni: serve che l'utente aggiunga la carta su fly.io/trial.
+
 ### Da fare
-- Adapter swap per bonding curve pump.fun (Jupiter non la instrada).
+- % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
 Prossimo step: F5 — hardening (kill switch, limiti, logging, adapter on-chain reale per l'ingest e per i token in bonding curve, build per Solana dApp Store).

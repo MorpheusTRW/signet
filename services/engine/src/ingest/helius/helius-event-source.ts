@@ -1,6 +1,6 @@
 import WebSocket from "ws";
-import type { EventSource, RawLaunchEvent, UnverifiedAspect } from "../event-source.js";
-import { fetchMintInfo, fetchTopHolderPercentages, fetchWalletAgeDays } from "./enrich.js";
+import type { EventSource, LaunchPattern, RawLaunchEvent, UnverifiedAspect } from "../event-source.js";
+import { fetchMintInfo, fetchTopHolderPercentages, fetchWalletFirstSeen, walletAgeDays } from "./enrich.js";
 import { type DailyBudget, type EnhancedApi, fetchTokenHistory, type TokenHistory } from "./history.js";
 import { parseCreatePool, type RawTransaction } from "./parse-create-pool.js";
 import type { RpcCall } from "./rpc.js";
@@ -148,7 +148,8 @@ export class HeliusEventSource implements EventSource {
     for (let attempt = 0; attempt < TX_FETCH_ATTEMPTS; attempt++) {
       const tx = await this.options.rpc<RawTransaction | null>("getTransaction", [
         signature,
-        { encoding: "json", maxSupportedTransactionVersion: 0, commitment: "confirmed" },
+        // v1: nuovo formato di transazione (2026), stessa struttura json di v0 (verificato dal vivo).
+        { encoding: "json", maxSupportedTransactionVersion: 1, commitment: "confirmed" },
       ]);
       if (tx) return tx;
       await this.sleep(TX_FETCH_DELAY_MS * (attempt + 1));
@@ -172,22 +173,49 @@ export class HeliusEventSource implements EventSource {
       return null;
     }
 
-    const [topHolderPercentages, walletAgeDays, history] = await Promise.all([
-      fetchTopHolderPercentages(rpc, pool.tokenMint, mint.supplyRaw, [pool.poolBaseVault]),
-      fetchWalletAgeDays(rpc, pool.coinCreator, this.now() / 1000),
+    const [topHolderPercentages, devFirstSeen, history] = await Promise.all([
+      // Può fallire (es. "not a Token mint" su alcuni mint appena migrati): non scartare
+      // tutto il segnale, marca solo la distribuzione come non verificata.
+      fetchTopHolderPercentages(rpc, pool.tokenMint, mint.supplyRaw, [pool.poolBaseVault]).catch(
+        (): number[] | null => null,
+      ),
+      fetchWalletFirstSeen(rpc, pool.coinCreator).catch((): number | null => null),
       this.options.history
         ? fetchTokenHistory(
             { ...this.options.history, rpc },
-            { mint: pool.tokenMint, creator: pool.coinCreator },
+            {
+              mint: pool.tokenMint,
+              creator: pool.coinCreator,
+              supply: Number(mint.supplyRaw) / 10 ** mint.decimals,
+            },
           ).catch((): TokenHistory => ({}))
         : Promise.resolve<TokenHistory>({}),
     ]);
-    const { snipers, previousLaunches, previousLaunchesMigrated } = history;
+    const { previousLaunches, previousLaunchesMigrated, launch: analysis } = history;
+    const snipers = analysis?.snipers;
 
     // I rug precedenti non sono ricostruibili in modo affidabile: sempre "non verificati".
     const unverified: UnverifiedAspect[] = ["dev-rugs"];
     if (previousLaunches === undefined) unverified.push("dev-launches");
     if (snipers === undefined) unverified.push("snipes");
+    if (topHolderPercentages === null) unverified.push("holders");
+
+    const launch: LaunchPattern | undefined =
+      analysis && analysis.createTime > 0
+        ? {
+            minutesToMigrate: Math.max(
+              0,
+              Math.round(((pool.blockTime ?? this.now() / 1000) - analysis.createTime) / 60),
+            ),
+            bundleWallets: analysis.bundleWallets,
+            bundlePct: analysis.bundlePct,
+            devBuyPct: analysis.devBuyPct,
+            snipersPct: analysis.snipersPct,
+            linkedWallets: analysis.linkedWallets,
+            devFundedMinutesBeforeLaunch:
+              devFirstSeen === null ? null : (analysis.createTime - devFirstSeen) / 60,
+          }
+        : undefined;
 
     return {
       id: signature,
@@ -198,17 +226,19 @@ export class HeliusEventSource implements EventSource {
       ...(mint.name && { tokenName: mint.name }),
       createdAt: new Date((pool.blockTime ?? this.now() / 1000) * 1000).toISOString(),
       initialLiquiditySol: pool.initialLiquiditySol,
-      topHolderPercentages,
+      topHolderPercentages: topHolderPercentages ?? [],
       devWalletHistory: {
         previousLaunches: previousLaunches ?? 0,
         ...(previousLaunchesMigrated !== undefined && { previousLaunchesMigrated }),
         previousRugs: 0,
-        walletAgeDays,
+        walletAgeDays: walletAgeDays(devFirstSeen, this.now() / 1000),
       },
       snipedWalletsCount: snipers ?? 0,
       mintAuthorityRevoked: mint.mintAuthorityRevoked,
       freezeAuthorityRevoked: mint.freezeAuthorityRevoked,
       unverified,
+      pumpMigration: true,
+      ...(launch && { launch }),
     };
   }
 }

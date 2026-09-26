@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import {
-  analyzeSnipes,
+  analyzeLaunch,
   bondingCurveAddress,
   DailyBudget,
   type EnhancedTransaction,
@@ -24,31 +24,51 @@ describe("bondingCurveAddress", () => {
   });
 });
 
-describe("analyzeSnipes", () => {
+describe("analyzeLaunch", () => {
   const bondingCurve = bondingCurveAddress(MINT);
+  const params = { mint: MINT, bondingCurve, creator: CREATOR, supply: 1_000_000_000 };
 
-  it("conta i wallet che ricevono il token nei primi blocchi, escluso il dev (dati reali)", () => {
-    expect(analyzeSnipes(firstTxs, { mint: MINT, bondingCurve, creator: CREATOR })).toEqual({
-      createSlot: 450357528,
-      snipers: 1,
-    });
+  it("metriche del lancio su dati reali", () => {
+    const launch = analyzeLaunch(firstTxs, params)!;
+    expect(launch.createSlot).toBe(450357528);
+    expect(launch.snipers).toBe(1);
+    // Il dev compra nella tx di creazione; nessun altro nello stesso slot.
+    expect(launch.bundleWallets).toBe(0);
+    expect(launch.devBuyPct).toBeGreaterThan(0);
+    // Lo sniper riceve i token ma la fee la paga un altro wallet.
+    expect(launch.linkedWallets).toBe(1);
   });
 
-  it("ignora acquisti dopo la finestra e tx fallite", () => {
+  it("bundle = acquisti di altri wallet nello stesso slot della creazione", () => {
     const base = firstTxs[0]!;
-    const buy = (slot: number, to: string, err: unknown = null): EnhancedTransaction => ({
+    const buy = (slot: number, to: string, amount: number, payer = to, err: unknown = null): EnhancedTransaction => ({
       ...base,
       type: "SWAP",
       slot,
+      feePayer: payer,
       transactionError: err,
-      tokenTransfers: [{ fromUserAccount: bondingCurve, toUserAccount: to, mint: MINT, tokenAmount: 1 }],
+      tokenTransfers: [{ fromUserAccount: bondingCurve, toUserAccount: to, mint: MINT, tokenAmount: amount }],
     });
-    const txs = [base, buy(base.slot, "A"), buy(base.slot + 3, "B"), buy(base.slot + 4, "C"), buy(base.slot + 1, "D", "x")];
-    expect(analyzeSnipes(txs, { mint: MINT, bondingCurve, creator: CREATOR })?.snipers).toBe(2);
+    const txs = [
+      { ...base, tokenTransfers: [{ fromUserAccount: bondingCurve, toUserAccount: CREATOR, mint: MINT, tokenAmount: 30_000_000 }] },
+      buy(base.slot, "A", 50_000_000),
+      buy(base.slot, "B", 40_000_000, "A"),
+      buy(base.slot + 3, "C", 10_000_000),
+      buy(base.slot + 4, "D", 90_000_000),
+      buy(base.slot + 1, "E", 90_000_000, "E", "x"),
+    ];
+    const launch = analyzeLaunch(txs, params)!;
+    expect(launch.devBuyPct).toBe(3);
+    expect(launch.bundleWallets).toBe(2);
+    expect(launch.bundlePct).toBe(9);
+    expect(launch.snipers).toBe(3);
+    expect(launch.snipersPct).toBe(10);
+    expect(launch.linkedWallets).toBe(1);
+    expect(launch.earlyBuyers.sort()).toEqual(["A", "B", "C"]);
   });
 
   it("null se nelle tx non c'è la creazione", () => {
-    expect(analyzeSnipes(firstTxs.slice(1), { mint: MINT, bondingCurve, creator: CREATOR })).toBeNull();
+    expect(analyzeLaunch(firstTxs.slice(1), params)).toBeNull();
   });
 });
 
@@ -95,22 +115,25 @@ describe("fetchTokenHistory", () => {
   }
 
   it("combina snipe, lanci precedenti e migrati", async () => {
-    const result = await fetchTokenHistory(deps({ complete: [0, 5] }), { mint: MINT, creator: CREATOR });
-    expect(result).toEqual({ snipers: 1, previousLaunches: creates.length, previousLaunchesMigrated: 2 });
+    const result = await fetchTokenHistory(deps({ complete: [0, 5] }), { mint: MINT, creator: CREATOR, supply: 1e9 });
+    expect(result.launch?.snipers).toBe(1);
+    expect(result.previousLaunches).toBe(creates.length);
+    expect(result.previousLaunchesMigrated).toBe(2);
   });
 
   it("se i lanci del dev falliscono, restano solo gli snipe", async () => {
     const result = await fetchTokenHistory(
       deps({ creates: () => Promise.reject(new Error("503")) }),
-      { mint: MINT, creator: CREATOR },
+      { mint: MINT, creator: CREATOR, supply: 1e9 },
     );
-    expect(result).toEqual({ snipers: 1 });
+    expect(result.launch?.snipers).toBe(1);
+    expect(result.previousLaunches).toBeUndefined();
   });
 
   it("budget esaurito: nessuna chiamata e niente dati", async () => {
     const d = deps();
     d.budget = new DailyBudget(1);
-    expect(await fetchTokenHistory(d, { mint: MINT, creator: CREATOR })).toEqual({});
+    expect(await fetchTokenHistory(d, { mint: MINT, creator: CREATOR, supply: 1e9 })).toEqual({});
     expect(d.enhanced).not.toHaveBeenCalled();
   });
 });

@@ -43,6 +43,8 @@ export interface ParsedCreatePool {
   poolBaseVault: string;
   coinCreator: string;
   initialLiquiditySol: number;
+  /** Token (unità raw) versati nella pool: con la liquidità SOL dà il prezzo alla migrazione. */
+  initialTokenAmountRaw: bigint;
   blockTime: number | null;
 }
 
@@ -88,6 +90,7 @@ export function parseCreatePool(tx: RawTransaction): ParsedCreatePool | null {
     // Solo pool con quote wSOL: la liquidità è espressa in SOL e Jupiter/`/build-swap` partono da SOL.
     if (quoteMint !== NATIVE_MINT.toBase58()) continue;
 
+    const baseAmountIn = data.readBigUInt64LE(8 + U16);
     const quoteAmountIn = data.readBigUInt64LE(8 + U16 + U64);
     const coinCreator = bs58.encode(data.subarray(8 + U16 + U64 + U64, 8 + U16 + U64 + U64 + PUBKEY));
 
@@ -97,6 +100,7 @@ export function parseCreatePool(tx: RawTransaction): ParsedCreatePool | null {
       poolBaseVault,
       coinCreator,
       initialLiquiditySol: Number(quoteAmountIn) / 1_000_000_000,
+      initialTokenAmountRaw: baseAmountIn,
       blockTime: tx.blockTime,
     };
   }

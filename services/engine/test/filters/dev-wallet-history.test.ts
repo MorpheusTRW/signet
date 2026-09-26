@@ -39,7 +39,7 @@ describe("checkDevWalletHistory", () => {
     const result = checkDevWalletHistory(event);
     expect(result.passed).toBe(false);
     expect(result.reason).toBe("Dev seriale: almeno 26 lanci precedenti, 1 migrato");
-    expect(result.riskPoints).toBe(25);
+    expect(result.riskPoints).toBe(50);
   });
 
   it("flags a dev with a few launches and none migrated", () => {

@@ -35,7 +35,8 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
         id: "dev-wallet-history",
         passed: false,
         reason: `Dev seriale: ${launchesLabel(previousLaunches, previousLaunchesMigrated)}`,
-        riskPoints: 25,
+        // Backtest 2026-09-26: tutti i token di dev seriali hanno perso oltre l'80%.
+        riskPoints: 50,
       };
     }
     if (previousLaunches >= REPEAT_LAUNCHES && previousLaunchesMigrated === 0) {
@@ -48,7 +49,8 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
     }
   }
 
-  if (walletAgeDays < YOUNG_WALLET_DAYS) {
+  // Con l'analisi del lancio, il wallet usa e getta è valutato da fresh-dev-wallet (in minuti).
+  if (walletAgeDays < YOUNG_WALLET_DAYS && !event.launch) {
     return {
       id: "dev-wallet-history",
       passed: false,

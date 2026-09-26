@@ -8,6 +8,14 @@ const HIGH_THRESHOLD_PCT = 65;
 export function checkTopHolderConcentration(
   event: RawLaunchEvent,
 ): FilterCheck {
+  if (event.unverified?.includes("holders")) {
+    return {
+      id: "top-holder-concentration",
+      passed: false,
+      reason: "Distribuzione dei top holder non verificata",
+      riskPoints: 5,
+    };
+  }
   const totalPct = event.topHolderPercentages.reduce((a, b) => a + b, 0);
   const rounded = Math.round(totalPct * 10) / 10;
 

@@ -5,6 +5,8 @@ import type { SignalDeliveriesRepo } from "../db/signal-deliveries-repo.js";
 import { resolveTier, type ResolveTierDeps } from "../entitlements/resolve-tier.js";
 
 export interface SchedulePushDeps {
+  /** Se false (default) i segnali ad alto rischio restano nel feed ma non generano push. */
+  pushHighRisk?: boolean;
   devicesRepo: DevicesRepo;
   pushNotificationsRepo: PushNotificationsRepo;
   signalDeliveriesRepo: SignalDeliveriesRepo;
@@ -52,6 +54,7 @@ export async function scheduleSignalPush(
   deps: SchedulePushDeps,
   now: Date = new Date(),
 ): Promise<void> {
+  if (signal.riskReport.level === "high" && !deps.pushHighRisk) return;
   const notification = buildSignalNotification(signal);
 
   for (const device of deps.devicesRepo.listAll()) {
