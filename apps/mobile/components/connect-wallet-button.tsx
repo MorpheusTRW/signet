@@ -3,7 +3,6 @@ import { AppActionButton } from '@/components/app-action-button'
 
 export function ConnectWalletButton() {
   const { connect } = useMobileWallet()
-
   return (
     <AppActionButton
       title="Connetti wallet"

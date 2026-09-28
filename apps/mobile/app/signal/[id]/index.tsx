@@ -1,108 +1,226 @@
 import { useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Linking, ScrollView, Text, TextInput, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import type { RiskLevel } from '@seeker-signal/shared'
-import { AppActionButton } from '@/components/app-action-button'
-import { appStyles, colors } from '@/constants/app-styles'
+import { Linking, Pressable, StyleSheet, TextInput, View } from 'react-native'
+import Animated, { FadeInDown } from 'react-native-reanimated'
+import Clipboard from '@react-native-clipboard/clipboard'
+import * as Haptics from 'expo-haptics'
+import { SymbolView } from 'expo-symbols'
+import { BackBar, Chip, Metric, TokenAvatar } from '@/components/ui/bits'
+import { Button } from '@/components/ui/button'
+import { Glass } from '@/components/ui/glass'
+import { RiskMeter, RiskPill } from '@/components/ui/risk'
+import { Screen } from '@/components/ui/screen'
+import { Text } from '@/components/ui/text'
+import { fonts, palette, radius, risk } from '@/constants/theme'
 import { getSignal } from '@/lib/api/client'
+import { formatSol, shortAddress, timeAgo } from '@/lib/format'
 import { launchPage } from '@/lib/launch-page'
 import { useSettings } from '@/lib/settings/settings'
 
-const RISK_LABELS: Record<RiskLevel, string> = { low: 'Basso', medium: 'Medio', high: 'Alto' }
-const RISK_COLORS: Record<RiskLevel, string> = { low: colors.success, medium: colors.warning, high: colors.danger }
-
-const inputStyle = {
-  color: colors.text,
-  fontSize: 20,
-  borderBottomWidth: 1,
-  borderBottomColor: colors.border,
-  paddingVertical: 6,
-}
+const AMOUNT_PRESETS = [0.05, 0.1, 0.25, 0.5]
+const SLIPPAGE_PRESETS = [50, 100, 200, 500]
 
 export default function SignalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
-  const query = useQuery({
-    queryKey: ['signal', id],
-    queryFn: () => getSignal(id),
-    enabled: !!id,
-  })
+  const query = useQuery({ queryKey: ['signal', id], queryFn: () => getSignal(id), enabled: !!id })
 
   const { settings } = useSettings()
   const [amountSol, setAmountSol] = useState(String(settings.defaultSizeSol))
-  const [slippageBps, setSlippageBps] = useState(String(settings.slippageBps))
+  const [slippageBps, setSlippageBps] = useState(settings.slippageBps)
+  const [copied, setCopied] = useState(false)
 
-  if (query.isLoading) {
+  if (query.isLoading || query.isError || !query.data) {
     return (
-      <SafeAreaView style={appStyles.screen}>
-        <Text style={appStyles.textMuted}>Caricamento…</Text>
-      </SafeAreaView>
-    )
-  }
-
-  if (query.isError || !query.data) {
-    return (
-      <SafeAreaView style={appStyles.screen}>
-        <Text style={appStyles.textDanger}>Segnale non trovato.</Text>
-      </SafeAreaView>
+      <Screen tabBar={false}>
+        <BackBar />
+        <Text variant="secondary">{query.isLoading ? 'Caricamento…' : 'Segnale non trovato.'}</Text>
+      </Screen>
     )
   }
 
   const signal = query.data
-  const riskColor = RISK_COLORS[signal.riskReport.level]
+  const level = signal.riskReport.level
+  const symbol = signal.tokenSymbol?.trim() || signal.tokenName?.trim() || 'Token'
+  const page = launchPage(signal)
+  const amount = Number(amountSol.replace(',', '.'))
+  const amountValid = Number.isFinite(amount) && amount > 0
 
   return (
-    <SafeAreaView style={appStyles.screen}>
-      <ScrollView contentContainerStyle={appStyles.stack}>
-        <Text style={appStyles.title}>{signal.tokenName ?? signal.tokenSymbol ?? 'Token'}</Text>
-        <Text style={appStyles.subtitle}>
-          {signal.program} · {signal.tokenMint}
-        </Text>
-        <AppActionButton
-          title={launchPage(signal).label}
-          onPress={async () => {
-            await Linking.openURL(launchPage(signal).url)
-          }}
-        />
+    <Screen scroll tabBar={false}>
+      <BackBar title="Segnale" />
 
-        <View style={appStyles.card}>
-          <Text style={[appStyles.body, { color: riskColor, fontWeight: '700' }]}>
-            Rischio {RISK_LABELS[signal.riskReport.level]} · {signal.riskReport.score}/100
+      {/* Hero del token */}
+      <Animated.View entering={FadeInDown.duration(450)} style={styles.hero}>
+        <TokenAvatar symbol={symbol} size={64} />
+        <View style={{ flex: 1, gap: 4 }}>
+          <Text variant="title" numberOfLines={1}>
+            {symbol}
           </Text>
-          {signal.riskReport.reasons.map((reason) => (
-            <Text key={reason} style={appStyles.textMuted}>
-              • {reason}
+          <Pressable
+            onPress={() => {
+              Clipboard.setString(signal.tokenMint)
+              void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+              setCopied(true)
+            }}
+            style={styles.mint}
+          >
+            <Text variant="mono">{shortAddress(signal.tokenMint, 6)}</Text>
+            <SymbolView
+              name={{ ios: copied ? 'checkmark' : 'doc.on.doc', android: copied ? 'check' : 'content_copy' }}
+              tintColor={copied ? palette.mint : palette.textTertiary}
+              size={14}
+            />
+          </Pressable>
+        </View>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.duration(450).delay(60)}>
+        <Button
+          title={page.label}
+          variant="ghost"
+          onPress={() => void Linking.openURL(page.url)}
+          icon={
+            <SymbolView name={{ ios: 'arrow.up.right', android: 'north_east' }} tintColor={palette.text} size={18} />
+          }
+        />
+      </Animated.View>
+
+      {/* Rischio: numero grande + indicatore a segmenti + motivi */}
+      <Animated.View entering={FadeInDown.duration(450).delay(120)}>
+        <Glass glow={risk[level].color} style={{ gap: 16 }}>
+          <View style={styles.riskTop}>
+            <View>
+              <Text variant="label">Punteggio di rischio</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
+                <Text variant="number" color={risk[level].color}>
+                  {signal.riskReport.score}
+                </Text>
+                <Text variant="secondary" style={{ marginBottom: 8 }}>
+                  /100
+                </Text>
+              </View>
+            </View>
+            <RiskPill level={level} />
+          </View>
+          <RiskMeter score={signal.riskReport.score} level={level} />
+          <View style={{ gap: 10 }}>
+            {signal.riskReport.reasons.map((reason) => (
+              <View key={reason} style={styles.reason}>
+                <View style={[styles.reasonDot, { backgroundColor: risk[level].color }]} />
+                <Text variant="secondary" style={{ flex: 1 }}>
+                  {reason}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Glass>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.duration(450).delay(180)}>
+        <Glass>
+          <Text variant="label">Sintesi</Text>
+          <Text variant="body">{signal.summary}</Text>
+        </Glass>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.duration(450).delay(240)}>
+        <Glass style={{ gap: 18 }}>
+          <View style={styles.grid}>
+            <Metric label="Liquidità" value={formatSol(signal.initialLiquiditySol)} />
+            <Metric label="Rilevato" value={timeAgo(signal.createdAt)} />
+          </View>
+          <View style={styles.grid}>
+            <Metric label="Pool" value={shortAddress(signal.poolAddress)} mono />
+            <Metric label="Venue" value={signal.program} mono />
+          </View>
+        </Glass>
+      </Animated.View>
+
+      {/* Entry: importo, slippage, azione principale */}
+      <Animated.View entering={FadeInDown.duration(450).delay(300)}>
+        <Glass style={{ gap: 16 }}>
+          <Text variant="label">Importo</Text>
+          <View style={styles.amountRow}>
+            <TextInput
+              style={styles.amountInput}
+              keyboardType="decimal-pad"
+              value={amountSol}
+              onChangeText={setAmountSol}
+              selectionColor={palette.mint}
+              placeholder="0.0"
+              placeholderTextColor={palette.textTertiary}
+            />
+            <Text variant="heading" color={palette.textSecondary}>
+              SOL
             </Text>
-          ))}
-        </View>
+          </View>
+          <View style={styles.chips}>
+            {AMOUNT_PRESETS.map((preset) => (
+              <Chip
+                key={preset}
+                label={`${preset}`}
+                selected={amount === preset}
+                onPress={() => setAmountSol(String(preset))}
+              />
+            ))}
+          </View>
 
-        <View style={appStyles.card}>
-          <Text style={appStyles.body}>{signal.summary}</Text>
-        </View>
+          <Text variant="label">Slippage massimo</Text>
+          <View style={styles.chips}>
+            {SLIPPAGE_PRESETS.map((bps) => (
+              <Chip
+                key={bps}
+                label={`${bps / 100}%`}
+                selected={slippageBps === bps}
+                onPress={() => setSlippageBps(bps)}
+              />
+            ))}
+          </View>
 
-        <View style={appStyles.card}>
-          <Text style={appStyles.textMuted}>Liquidità iniziale: {signal.initialLiquiditySol} SOL</Text>
-          <Text style={appStyles.textMuted}>Pool: {signal.poolAddress}</Text>
-          <Text style={appStyles.textMuted}>Creato: {new Date(signal.createdAt).toLocaleString()}</Text>
-        </View>
-
-        <View style={appStyles.card}>
-          <Text style={appStyles.subtitle}>Importo (SOL)</Text>
-          <TextInput style={inputStyle} keyboardType="decimal-pad" value={amountSol} onChangeText={setAmountSol} />
-          <Text style={appStyles.subtitle}>Slippage (bps)</Text>
-          <TextInput style={inputStyle} keyboardType="number-pad" value={slippageBps} onChangeText={setSlippageBps} />
-          <AppActionButton
-            title="Approva Entry"
-            onPress={async () => {
+          <Button
+            title="Approva entry"
+            disabled={!amountValid}
+            onPress={() =>
               router.push({
                 pathname: '/signal/[id]/approve',
-                params: { id: signal.id, amountSol, slippageBps },
+                params: { id: signal.id, amountSol: String(amount), slippageBps: String(slippageBps) },
               })
-            }}
+            }
           />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          <Text variant="caption" style={{ textAlign: 'center' }}>
+            La transazione viene costruita al momento e verificata prima della firma.
+          </Text>
+        </Glass>
+      </Animated.View>
+    </Screen>
   )
 }
+
+const styles = StyleSheet.create({
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 16, marginTop: 4 },
+  mint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: radius.sm,
+    backgroundColor: palette.surface,
+  },
+  riskTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  reason: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  reasonDot: { width: 5, height: 5, borderRadius: 3, marginTop: 8 },
+  grid: { flexDirection: 'row', gap: 16 },
+  amountRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  amountInput: {
+    flex: 1,
+    color: palette.text,
+    fontFamily: fonts.bold,
+    fontSize: 40,
+    letterSpacing: -1.2,
+    paddingVertical: 0,
+  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+})

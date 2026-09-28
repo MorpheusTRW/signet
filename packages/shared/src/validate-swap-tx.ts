@@ -193,7 +193,8 @@ async function simulateRealizedFeeBps(
     return null;
   }
 
-  const data = Buffer.from(rawBase64, "base64");
+  // Uint8Array esplicito: con i tipi Buffer più recenti un Buffer non è più assegnabile a Uint8Array<ArrayBufferLike>.
+  const data = new Uint8Array(Buffer.from(rawBase64, "base64"));
   const postBalance = AccountLayout.decode(data).amount;
 
   const feeLamports = postBalance - preBalance;

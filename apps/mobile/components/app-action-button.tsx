@@ -1,43 +1,53 @@
+import * as Haptics from 'expo-haptics'
 import { useState } from 'react'
-import { Button, View } from 'react-native'
-import { AppStatus, AppStatusProps } from '@/components/app-status'
-import { appStyles } from '@/constants/app-styles'
+import { View } from 'react-native'
+import { AppStatus, type AppStatusProps } from '@/components/app-status'
+import { Button } from '@/components/ui/button'
 import { formatError } from '@/utils/format-error'
 
 /**
- * A Button that runs an async action, keeps it from floating as an unhandled
- * rejection, disables itself while in flight, and shows the outcome inline.
+ * Pulsante che esegue un'azione async, evita rejection non gestite, si disabilita
+ * mentre è in corso e mostra l'esito sotto di sé.
  */
 export function AppActionButton({
   disabled,
   onPress,
   title,
+  variant = 'primary',
 }: {
   disabled?: boolean
   onPress: () => Promise<AppStatusProps | void>
   title: string
+  variant?: 'primary' | 'ghost' | 'danger'
 }) {
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState<AppStatusProps | null>(null)
 
   async function submit() {
-    if (isLoading) {
-      return
-    }
+    if (isLoading) return
     setIsLoading(true)
     setStatus(null)
     try {
-      setStatus((await onPress()) ?? null)
+      const result = (await onPress()) ?? null
+      setStatus(result)
+      if (result) {
+        void Haptics.notificationAsync(
+          result.status === 'success'
+            ? Haptics.NotificationFeedbackType.Success
+            : Haptics.NotificationFeedbackType.Error,
+        )
+      }
     } catch (error) {
-      setStatus({ description: formatError(error), status: 'danger', title: `${title} failed` })
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+      setStatus({ description: formatError(error), status: 'danger', title: `${title}: errore` })
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <View style={appStyles.stack}>
-      <Button disabled={disabled || isLoading} onPress={() => void submit()} title={isLoading ? 'Working...' : title} />
+    <View style={{ gap: 12 }}>
+      <Button title={title} variant={variant} loading={isLoading} disabled={disabled} onPress={() => void submit()} />
       {status ? <AppStatus {...status} /> : null}
     </View>
   )

@@ -1,25 +1,50 @@
 import { Tabs } from 'expo-router'
-import type { ColorValue } from 'react-native'
+import { StyleSheet, View, type ColorValue } from 'react-native'
 import { SymbolView, type SymbolViewProps } from 'expo-symbols'
-import { colors } from '@/constants/app-styles'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { fonts, palette, radius } from '@/constants/theme'
 
-// Icone Material (Android) via expo-symbols: senza tabBarIcon la tab bar mostra un glifo mancante.
+// Icone Material (Android) via expo-symbols; l'icona attiva ha un alone del colore accento.
 function tabIcon(name: SymbolViewProps['name']) {
-  return function TabIcon({ color, size }: { color: ColorValue; size: number }) {
-    return <SymbolView name={name} tintColor={color} size={size} />
+  return function TabIcon({ color, focused }: { color: ColorValue; focused: boolean; size: number }) {
+    return (
+      <View style={[styles.icon, focused ? styles.iconFocused : null]}>
+        <SymbolView name={name} tintColor={color} size={22} />
+      </View>
+    )
   }
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets()
   return (
     <Tabs
       screenOptions={{
-        headerStyle: { backgroundColor: colors.background },
-        headerTintColor: colors.text,
-        headerShadowVisible: false,
-        tabBarStyle: { backgroundColor: colors.card, borderTopColor: colors.border },
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.textMuted,
+        headerShown: false,
+        sceneStyle: { backgroundColor: palette.bg },
+        // Tab bar flottante: pannello scuro traslucido staccato dai bordi.
+        tabBarStyle: {
+          position: 'absolute',
+          left: 16,
+          right: 16,
+          bottom: Math.max(insets.bottom, 12) + 4,
+          marginHorizontal: 16,
+          height: 70,
+          paddingTop: 8,
+          paddingBottom: 10,
+          borderRadius: radius.xl,
+          backgroundColor: palette.tabBar,
+          borderTopWidth: 0,
+          borderWidth: 1,
+          borderColor: palette.hairline,
+          elevation: 12,
+          shadowColor: '#000',
+          shadowOpacity: 0.5,
+          shadowRadius: 20,
+        },
+        tabBarActiveTintColor: palette.mint,
+        tabBarInactiveTintColor: palette.textTertiary,
+        tabBarLabelStyle: { fontFamily: fonts.monoMedium, fontSize: 9.5, letterSpacing: 0.6 },
       }}
     >
       <Tabs.Screen
@@ -35,7 +60,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="track-record"
-        options={{ title: 'Track record', tabBarIcon: tabIcon({ ios: 'chart.bar', android: 'query_stats' }) }}
+        options={{ title: 'Track', tabBarIcon: tabIcon({ ios: 'chart.bar', android: 'query_stats' }) }}
       />
       <Tabs.Screen
         name="plans"
@@ -43,7 +68,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: 'Impostazioni', tabBarIcon: tabIcon({ ios: 'gearshape', android: 'settings' }) }}
+        options={{ title: 'Opzioni', tabBarIcon: tabIcon({ ios: 'gearshape', android: 'tune' }) }}
       />
       {/* Solo in sviluppo: firma una tx di prova su mainnet, non va mostrata agli utenti della build release. */}
       <Tabs.Screen
@@ -57,3 +82,8 @@ export default function TabsLayout() {
     </Tabs>
   )
 }
+
+const styles = StyleSheet.create({
+  icon: { width: 44, height: 30, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  iconFocused: { backgroundColor: palette.mintSoft },
+})

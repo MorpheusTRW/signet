@@ -1,13 +1,17 @@
 import { useLocalSearchParams } from 'expo-router'
 import { useQuery } from '@tanstack/react-query'
-import { Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { View } from 'react-native'
+import Animated, { FadeInDown } from 'react-native-reanimated'
 import { VersionedTransaction } from '@solana/web3.js'
 import { JUPITER_SWAP_ALLOWED_PROGRAMS, validateSwapTx } from '@seeker-signal/shared'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { AppActionButton } from '@/components/app-action-button'
 import { ConnectWalletButton } from '@/components/connect-wallet-button'
-import { appStyles } from '@/constants/app-styles'
+import { BackBar, Divider, Row } from '@/components/ui/bits'
+import { Glass } from '@/components/ui/glass'
+import { Screen } from '@/components/ui/screen'
+import { Text } from '@/components/ui/text'
+import { palette } from '@/constants/theme'
 import { buildSwap, BuildSwapError, getPositions, getStatus } from '@/lib/api/client'
 import { useSettings } from '@/lib/settings/settings'
 
@@ -22,13 +26,25 @@ const VALIDATION_REASON_LABELS: Record<string, string> = {
 
 function describeValidationFailure(reason: string): string {
   if (VALIDATION_REASON_LABELS[reason]) return VALIDATION_REASON_LABELS[reason]
-  if (reason.startsWith('program_not_allowed:')) {
-    return `Program non in allowlist: ${reason.split(':')[1]}`
-  }
+  if (reason.startsWith('program_not_allowed:')) return `Program non in allowlist: ${reason.split(':')[1]}`
   if (reason.startsWith('unknown_transfer_destination:')) {
     return `Trasferimento verso un indirizzo sconosciuto: ${reason.split(':')[1]}`
   }
   return `Validazione fallita: ${reason}`
+}
+
+function Blocked({ title, message }: { title: string; message: string }) {
+  return (
+    <Screen tabBar={false}>
+      <BackBar title="Conferma entry" />
+      <Glass glow={palette.red} style={{ marginTop: 12 }}>
+        <Text variant="heading" color={palette.red}>
+          {title}
+        </Text>
+        <Text variant="secondary">{message}</Text>
+      </Glass>
+    </Screen>
+  )
 }
 
 export default function ApproveEntryScreen() {
@@ -36,17 +52,12 @@ export default function ApproveEntryScreen() {
     id,
     amountSol: amountSolParam,
     slippageBps: slippageBpsParam,
-  } = useLocalSearchParams<{
-    id: string
-    amountSol: string
-    slippageBps: string
-  }>()
+  } = useLocalSearchParams<{ id: string; amountSol: string; slippageBps: string }>()
   const amountSol = Number(amountSolParam)
   const slippageBps = Number(slippageBpsParam)
 
   const { account, connection, signAndSendTransactions } = useMobileWallet()
   const pubkey = account?.address.toBase58()
-
   const { settings } = useSettings()
 
   const buildQuery = useQuery({
@@ -70,30 +81,32 @@ export default function ApproveEntryScreen() {
 
   if (settings.killSwitch) {
     return (
-      <SafeAreaView style={appStyles.screen}>
-        <Text style={appStyles.textDanger}>
-          Kill switch attivo su questo dispositivo: nuove entry bloccate. Disattivalo da Impostazioni.
-        </Text>
-      </SafeAreaView>
+      <Blocked
+        title="Kill switch attivo"
+        message="Nuove entry bloccate su questo dispositivo. Puoi disattivarlo da Opzioni."
+      />
     )
   }
 
   if (!pubkey) {
     return (
-      <SafeAreaView style={appStyles.screen}>
-        <View style={[appStyles.stack, { flex: 1, justifyContent: 'center' }]}>
-          <Text style={appStyles.subtitle}>Connetti il wallet per continuare.</Text>
-          <ConnectWalletButton />
-        </View>
-      </SafeAreaView>
+      <Screen tabBar={false}>
+        <BackBar title="Conferma entry" />
+        <Text variant="secondary">Connetti il wallet per continuare.</Text>
+        <ConnectWalletButton />
+      </Screen>
     )
   }
 
   if (buildQuery.isLoading) {
     return (
-      <SafeAreaView style={appStyles.screen}>
-        <Text style={appStyles.textMuted}>Costruzione della transazione…</Text>
-      </SafeAreaView>
+      <Screen tabBar={false}>
+        <BackBar title="Conferma entry" />
+        <Glass style={{ marginTop: 12, alignItems: 'center', paddingVertical: 40 }}>
+          <Text variant="heading">Costruzione della transazione…</Text>
+          <Text variant="secondary">Quote e blockhash aggiornati in questo istante.</Text>
+        </Glass>
+      </Screen>
     )
   }
 
@@ -105,48 +118,60 @@ export default function ApproveEntryScreen() {
         : error instanceof Error
           ? error.message
           : 'Errore sconosciuto'
-    return (
-      <SafeAreaView style={appStyles.screen}>
-        <Text style={appStyles.textDanger}>Impossibile costruire lo swap: {message}</Text>
-      </SafeAreaView>
-    )
+    return <Blocked title="Swap non disponibile" message={message} />
   }
 
   const build = buildQuery.data
+  const receive =
+    build.quote.outAmountUi !== null ? build.quote.outAmountUi.toLocaleString('it-IT') : build.quote.outAmount
 
   return (
-    <SafeAreaView style={appStyles.screen}>
-      <View style={appStyles.stack}>
-        <Text style={appStyles.title}>Conferma entry</Text>
+    <Screen scroll tabBar={false}>
+      <BackBar title="Conferma entry" />
 
-        <View style={appStyles.card}>
-          <Text style={appStyles.bigStat}>{build.amountSol} SOL</Text>
-          <Text style={appStyles.textMuted}>Importo che verrà speso</Text>
-        </View>
-
-        <View style={appStyles.card}>
-          <Text style={appStyles.body}>
-            Fee piattaforma: {build.feeBps / 100}% · {build.feeSol.toFixed(6)} SOL
+      <Animated.View entering={FadeInDown.duration(450)} style={{ gap: 6, marginTop: 8 }}>
+        <Text variant="label">Spendi</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+          <Text variant="number" style={{ fontSize: 56, lineHeight: 60 }}>
+            {build.amountSol}
           </Text>
-          <Text style={appStyles.body}>Slippage: {build.quote.slippageBps / 100}%</Text>
-          <Text style={appStyles.textMuted}>
-            Ricevi circa {build.quote.outAmountUi !== null ? build.quote.outAmountUi : build.quote.outAmount}
+          <Text variant="title" color={palette.textSecondary} style={{ marginBottom: 6 }}>
+            SOL
           </Text>
-          <Text style={appStyles.textMuted}>Impatto sul prezzo: {build.quote.priceImpactPct}</Text>
         </View>
+        <Text variant="secondary">Ricevi circa {receive} token</Text>
+      </Animated.View>
 
-        {build.tradingMode === 'paper' ? (
-          <View style={appStyles.card}>
-            <Text style={appStyles.textMuted}>
-              Modalità paper: la transazione viene validata ma non firmata né inviata on-chain.
+      <Animated.View entering={FadeInDown.duration(450).delay(80)}>
+        <Glass style={{ gap: 14 }}>
+          <Row label="Fee piattaforma" value={`${build.feeBps / 100}% · ${build.feeSol.toFixed(6)} SOL`} />
+          <Divider />
+          <Row label="Slippage massimo" value={`${build.quote.slippageBps / 100}%`} />
+          <Divider />
+          <Row label="Impatto sul prezzo" value={`${build.quote.priceImpactPct}%`} />
+        </Glass>
+      </Animated.View>
+
+      {build.tradingMode === 'paper' ? (
+        <Animated.View entering={FadeInDown.duration(450).delay(140)}>
+          <Glass glow={palette.amber}>
+            <Text variant="label" color={palette.amber}>
+              Modalità paper
             </Text>
-          </View>
-        ) : null}
+            <Text variant="secondary">
+              La transazione viene costruita e verificata, ma non firmata né inviata: nessun fondo reale si muove.
+            </Text>
+          </Glass>
+        </Animated.View>
+      ) : null}
 
+      <Animated.View entering={FadeInDown.duration(450).delay(200)} style={{ gap: 10 }}>
         <AppActionButton
-          title="Conferma"
+          title={build.tradingMode === 'paper' ? 'Verifica (paper)' : 'Firma e invia'}
           onPress={async () => {
-            const transaction = VersionedTransaction.deserialize(Buffer.from(build.transactionBase64, 'base64'))
+            const transaction = VersionedTransaction.deserialize(
+              new Uint8Array(Buffer.from(build.transactionBase64, 'base64')),
+            )
 
             const validation = await validateSwapTx(transaction, {
               userPubkey: pubkey,
@@ -160,7 +185,7 @@ export default function ApproveEntryScreen() {
             if (!validation.valid) {
               return {
                 status: 'danger',
-                title: 'Validazione fallita',
+                title: 'Validazione fallita: non firmare',
                 description: describeValidationFailure(validation.reason),
               } as const
             }
@@ -168,8 +193,8 @@ export default function ApproveEntryScreen() {
             if (build.tradingMode === 'paper') {
               return {
                 status: 'success',
-                title: 'Paper mode',
-                description: 'Validato. Nessuna transazione reale inviata (TRADING_MODE=paper).',
+                title: 'Transazione verificata',
+                description: 'Tutti i controlli superati. Nessuna transazione reale inviata (paper mode).',
               } as const
             }
 
@@ -180,10 +205,13 @@ export default function ApproveEntryScreen() {
               'confirmed',
             )
 
-            return { status: 'success', title: 'Tx confermata', description: signature } as const
+            return { status: 'success', title: 'Entry confermata on-chain', description: signature } as const
           }}
         />
-      </View>
-    </SafeAreaView>
+        <Text variant="caption" style={{ textAlign: 'center' }}>
+          Prima della firma l&apos;app verifica fee payer, program, importo e destinatari.
+        </Text>
+      </Animated.View>
+    </Screen>
   )
 }

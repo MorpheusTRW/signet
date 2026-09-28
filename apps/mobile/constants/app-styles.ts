@@ -1,69 +1,38 @@
 import { StyleSheet } from 'react-native'
+import { fonts, palette, radius } from './theme'
 
-// Palette dark, minimale, testo grande (CLAUDE.md, apps/mobile).
+// Alias retrocompatibili verso il design system (constants/theme.ts).
 export const colors = {
-  background: '#0B0B0F',
-  card: '#17171F',
-  border: '#2A2A34',
-  text: '#F2F2F5',
-  textMuted: '#9A9AA6',
-  danger: '#F87171',
-  success: '#34D399',
-  accent: '#14F195',
-  accentMuted: 'rgba(20, 241, 149, 0.16)',
-  warning: '#FBBF24',
-  warningMuted: 'rgba(251, 191, 36, 0.16)',
+  background: palette.bg,
+  card: palette.surface,
+  border: palette.hairline,
+  text: palette.text,
+  textMuted: palette.textSecondary,
+  danger: palette.red,
+  success: palette.mint,
+  accent: palette.mint,
+  accentMuted: palette.mintSoft,
+  warning: palette.amber,
+  warningMuted: palette.amberSoft,
 }
 
 export const appStyles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-    gap: 16,
-    paddingHorizontal: 16,
-  },
-  stack: {
-    gap: 10,
-  },
+  screen: { flex: 1, backgroundColor: palette.bg, gap: 16, paddingHorizontal: 20 },
+  stack: { gap: 12 },
   card: {
-    backgroundColor: colors.card,
-    borderColor: colors.border,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 16,
+    backgroundColor: palette.surface,
+    borderColor: palette.hairline,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 18,
     gap: 8,
   },
-  title: {
-    color: colors.text,
-    fontSize: 24,
-    fontWeight: '700',
-  },
-  subtitle: {
-    color: colors.textMuted,
-    fontSize: 15,
-  },
-  body: {
-    color: colors.text,
-    fontSize: 17,
-  },
-  textMuted: {
-    color: colors.textMuted,
-    fontSize: 14,
-  },
-  textDanger: {
-    color: colors.danger,
-  },
-  textSuccess: {
-    color: colors.success,
-  },
-  bigStat: {
-    color: colors.text,
-    fontSize: 44,
-    fontWeight: '800',
-  },
-  bigStatDanger: {
-    color: colors.danger,
-    fontSize: 44,
-    fontWeight: '800',
-  },
+  title: { color: palette.text, fontSize: 30, fontFamily: fonts.bold, letterSpacing: -0.8 },
+  subtitle: { color: palette.textSecondary, fontSize: 15, fontFamily: fonts.regular },
+  body: { color: palette.text, fontSize: 16, fontFamily: fonts.regular },
+  textMuted: { color: palette.textSecondary, fontSize: 14, fontFamily: fonts.regular },
+  textDanger: { color: palette.red, fontFamily: fonts.medium },
+  textSuccess: { color: palette.mint, fontFamily: fonts.medium },
+  bigStat: { color: palette.text, fontSize: 48, fontFamily: fonts.bold, letterSpacing: -1.5 },
+  bigStatDanger: { color: palette.red, fontSize: 48, fontFamily: fonts.bold, letterSpacing: -1.5 },
 })

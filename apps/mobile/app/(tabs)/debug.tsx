@@ -1,7 +1,7 @@
 import { TransactionMessage, VersionedTransaction } from '@solana/web3.js'
 import { createMemoInstruction } from '@solana/spl-memo'
 import { Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Screen } from '@/components/ui/screen'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { AppActionButton } from '@/components/app-action-button'
 import { ConnectWalletButton } from '@/components/connect-wallet-button'
@@ -13,7 +13,7 @@ export default function DebugScreen() {
   const { account, connection, signAndSendTransactions } = useMobileWallet()
 
   return (
-    <SafeAreaView style={appStyles.screen}>
+    <Screen>
       <View style={appStyles.stack}>
         <Text style={appStyles.title}>Debug</Text>
         <Text style={appStyles.textMuted}>
@@ -52,6 +52,6 @@ export default function DebugScreen() {
           </View>
         )}
       </View>
-    </SafeAreaView>
+    </Screen>
   )
 }

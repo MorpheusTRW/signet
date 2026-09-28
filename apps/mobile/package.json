@@ -29,6 +29,8 @@
     "android:release": "node scripts/check-release-env.mjs && expo prebuild -p android --clean && cd android && ./gradlew assembleRelease"
   },
   "dependencies": {
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
+    "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@expo/metro-runtime": "~57.0.15",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-clipboard/clipboard": "^1.16.3",
@@ -47,6 +49,7 @@
     "expo-font": "~57.0.3",
     "expo-haptics": "~57.0.2",
     "expo-image": "~57.0.4",
+    "expo-linear-gradient": "~57.0.2",
     "expo-linking": "~57.0.9",
     "expo-router": "~57.0.18",
     "expo-secure-store": "~57.0.4",

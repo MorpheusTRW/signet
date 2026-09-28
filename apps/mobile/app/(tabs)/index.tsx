@@ -1,11 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { FlatList, RefreshControl, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { FlatList, RefreshControl, View } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
-import { ConnectWalletButton } from '@/components/connect-wallet-button'
+import { ConnectHero } from '@/components/connect-hero'
 import { SignalCard } from '@/components/signal-card'
 import { TierBadge } from '@/components/tier-badge'
-import { appStyles, colors } from '@/constants/app-styles'
+import { Header, LiveDot } from '@/components/ui/bits'
+import { Glass } from '@/components/ui/glass'
+import { Backdrop } from '@/components/ui/screen'
+import { Text } from '@/components/ui/text'
+import { palette, TAB_BAR_CLEARANCE } from '@/constants/theme'
 import { getMeTier, getSignals } from '@/lib/api/client'
 
 const SIGNALS_REFETCH_INTERVAL_MS = 15_000
@@ -13,6 +17,7 @@ const SIGNALS_REFETCH_INTERVAL_MS = 15_000
 export default function FeedScreen() {
   const { account } = useMobileWallet()
   const pubkey = account?.address.toBase58()
+  const insets = useSafeAreaInsets()
 
   const tierQuery = useQuery({
     queryKey: ['me-tier', pubkey],
@@ -27,44 +32,50 @@ export default function FeedScreen() {
     refetchInterval: SIGNALS_REFETCH_INTERVAL_MS,
   })
 
-  if (!pubkey) {
-    return (
-      <SafeAreaView style={appStyles.screen}>
-        <View style={[appStyles.stack, { flex: 1, justifyContent: 'center' }]}>
-          <Text style={appStyles.title}>Seeker Signal</Text>
-          <Text style={appStyles.subtitle}>Connetti il wallet per vedere i segnali in arrivo.</Text>
-          <ConnectWalletButton />
-        </View>
-      </SafeAreaView>
-    )
-  }
+  if (!pubkey) return <ConnectHero />
 
   return (
-    <SafeAreaView style={appStyles.screen}>
-      <View style={appStyles.stack}>
-        <Text style={appStyles.title}>Segnali</Text>
-        {tierQuery.data ? (
-          <TierBadge tier={tierQuery.data.tier} delaySeconds={tierQuery.data.limits.signalDelaySeconds} />
-        ) : null}
-      </View>
+    <View style={{ flex: 1 }}>
+      <Backdrop />
       <FlatList
         data={signalsQuery.data ?? []}
         keyExtractor={(signal) => signal.id}
-        contentContainerStyle={{ gap: 10, paddingBottom: 24 }}
-        renderItem={({ item }) => <SignalCard signal={item} />}
+        contentContainerStyle={{
+          paddingTop: insets.top + 12,
+          paddingHorizontal: 20,
+          paddingBottom: TAB_BAR_CLEARANCE,
+          gap: 12,
+        }}
+        showsVerticalScrollIndicator={false}
+        ListHeaderComponent={
+          <View style={{ gap: 14, marginBottom: 8 }}>
+            <Header eyebrow="Seeker Signal" title="Segnali" right={<LiveDot />} />
+            {tierQuery.data ? (
+              <TierBadge tier={tierQuery.data.tier} delaySeconds={tierQuery.data.limits.signalDelaySeconds} />
+            ) : null}
+          </View>
+        }
+        renderItem={({ item, index }) => <SignalCard signal={item} index={index} />}
         refreshControl={
           <RefreshControl
-            refreshing={signalsQuery.isFetching}
+            refreshing={signalsQuery.isRefetching}
             onRefresh={() => void signalsQuery.refetch()}
-            tintColor={colors.text}
+            tintColor={palette.mint}
+            colors={[palette.mint]}
+            progressBackgroundColor="#0B0F14"
           />
         }
         ListEmptyComponent={
-          <Text style={appStyles.textMuted}>
-            {signalsQuery.isLoading ? 'Caricamento…' : 'Nessun segnale ancora. Torna a breve.'}
-          </Text>
+          <Glass style={{ alignItems: 'center', paddingVertical: 36, gap: 8 }}>
+            <Text variant="heading">{signalsQuery.isLoading ? 'Sintonizzazione…' : 'In ascolto della chain'}</Text>
+            <Text variant="secondary" style={{ textAlign: 'center' }}>
+              {signalsQuery.isError
+                ? 'Servizio non raggiungibile. Riprova tra poco.'
+                : 'I nuovi token compariranno qui appena superano i filtri.'}
+            </Text>
+          </Glass>
         }
       />
-    </SafeAreaView>
+    </View>
   )
 }
