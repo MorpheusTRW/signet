@@ -22,7 +22,8 @@ function devClause(event: RawLaunchEvent): string {
   if (previousLaunchesMigrated !== undefined) {
     if (previousLaunches === 0) return "Nessun lancio precedente del dev trovato";
     const migrated = previousLaunchesMigrated === 1 ? "1 migrato" : `${previousLaunchesMigrated} migrati`;
-    return `Dev con almeno ${previousLaunches} lanci, ${migrated}`;
+    const launches = previousLaunches === 1 ? "1 lancio" : `${previousLaunches} lanci`;
+    return `Dev con almeno ${launches}, ${migrated}`;
   }
   if (event.unverified?.includes("dev-rugs")) return "Storico dev non verificato";
   return "Dev pulito";

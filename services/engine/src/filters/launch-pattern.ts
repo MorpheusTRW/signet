@@ -39,11 +39,24 @@ export function checkMigrationSpeed(event: RawLaunchEvent): FilterCheck {
 }
 
 export function checkDevBuy(event: RawLaunchEvent): FilterCheck {
-  const pct = event.launch?.devBuyPct;
-  if (pct !== undefined && pct >= 50) {
+  const launch = event.launch;
+  if (!launch) return { id: "dev-buy", passed: true, reason: "Acquisto iniziale del dev non analizzato", riskPoints: 0 };
+  const pct = launch.devBuyPct;
+  // Chi compra nello stesso blocco della creazione agisce d'accordo col dev: dev + bundle
+  // sono di fatto la stessa mano (es. un solo wallet "esterno" che prende il 60% al lancio).
+  const insiders = Number((pct + launch.bundlePct).toFixed(2));
+  if (pct >= 50) {
     return { id: "dev-buy", passed: false, reason: `Il dev ha comprato il ${pct}% della supply al lancio`, riskPoints: 50 };
   }
-  if (pct !== undefined && pct >= 20) {
+  if (insiders >= 50) {
+    return {
+      id: "dev-buy",
+      passed: false,
+      reason: `Dev e bundle hanno comprato il ${insiders}% della supply al lancio`,
+      riskPoints: 50,
+    };
+  }
+  if (pct >= 20) {
     return { id: "dev-buy", passed: false, reason: `Il dev ha comprato il ${pct}% della supply al lancio`, riskPoints: 15 };
   }
   return { id: "dev-buy", passed: true, reason: "Acquisto iniziale del dev contenuto", riskPoints: 0 };
@@ -54,7 +67,8 @@ export function checkBundle(event: RawLaunchEvent): FilterCheck {
   const launch = event.launch;
   if (!launch) return { id: "bundle", passed: true, reason: "Bundle non analizzato", riskPoints: 0 };
   const linked = launch.linkedWallets >= 3 ? `, ${launch.linkedWallets} wallet collegati` : "";
-  const reason = `Bundle: ${launch.bundleWallets} wallet hanno comprato il ${launch.bundlePct}% nello stesso blocco del lancio${linked}`;
+  const verb = launch.bundleWallets === 1 ? "ha" : "hanno";
+  const reason = `Bundle: ${launch.bundleWallets} wallet ${verb} comprato il ${launch.bundlePct}% nello stesso blocco del lancio${linked}`;
   if (launch.bundlePct >= 30) return { id: "bundle", passed: false, reason, riskPoints: 30 };
   if (launch.bundlePct >= 10) return { id: "bundle", passed: false, reason, riskPoints: 15 };
   if (launch.linkedWallets >= 3) {

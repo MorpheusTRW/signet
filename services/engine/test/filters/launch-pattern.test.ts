@@ -40,6 +40,15 @@ describe("launch-pattern", () => {
     expect(checkDevBuy(makeRawLaunchEvent({ launch: organic })).passed).toBe(true);
   });
 
+  it("dev + bundle oltre il 50% al lancio = stessa mano", () => {
+    // Caso reale MAXWELL: un solo wallet ha preso il 60,85% nello stesso blocco della creazione.
+    const check = checkDevBuy(makeRawLaunchEvent({ launch: { ...organic, devBuyPct: 0, bundleWallets: 1, bundlePct: 60.85 } }));
+    expect(check.riskPoints).toBe(50);
+    expect(check.reason).toBe("Dev e bundle hanno comprato il 60.85% della supply al lancio");
+    const single = checkBundle(makeRawLaunchEvent({ launch: { ...organic, bundleWallets: 1, bundlePct: 60.85 } }));
+    expect(single.reason).toContain("1 wallet ha comprato");
+  });
+
   it("bundle e wallet collegati", () => {
     const heavy = checkBundle(makeRawLaunchEvent({ launch: { ...organic, bundleWallets: 6, bundlePct: 24, linkedWallets: 3 } }));
     expect(heavy.riskPoints).toBe(15);

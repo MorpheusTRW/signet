@@ -8,7 +8,8 @@ const REPEAT_LAUNCHES = 3;
 
 function launchesLabel(launches: number, migrated: number): string {
   const m = migrated === 1 ? "1 migrato" : `${migrated} migrati`;
-  return `almeno ${launches} lanci precedenti, ${m}`;
+  const l = launches === 1 ? "1 lancio precedente" : `${launches} lanci precedenti`;
+  return `almeno ${l}, ${m}`;
 }
 
 /** Storico del wallet dev: rug precedenti, lanci seriali e wallet appena creato sono forti segnali di rischio. */

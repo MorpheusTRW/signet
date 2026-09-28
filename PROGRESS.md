@@ -149,6 +149,10 @@
   - Fix: `getTransaction` con `maxSupportedTransactionVersion: 1` (Solana ha introdotto tx v1, stessa struttura json); `getTokenLargestAccounts` che fallisce non scarta più il segnale (holder "non verificati").
 - **Fly.io in trial**: senza carta registrata le macchine si fermano dopo 5 minuti (log: "Trial machine stopping"). Il server ha quindi perso quasi tutte le migrazioni: serve che l'utente aggiunga la carta su fly.io/trial.
 
+- **Regola insider**: dev + wallet del bundle (stesso blocco della creazione) ≥50% della supply = +50 come un dev buy ≥50% (caso reale MAXWELL: un solo wallet "esterno" col 60,85% risultava "Medio"). Backtest: Alto su 36 dei 40 rug (prima 35), nessun token positivo in più scartato. Grammatica singolare/plurale nelle sintesi.
+- **Redesign UI "Obsidian"** (app): design system in `constants/theme.ts` + `components/ui/*` (Text, Glass, Button, RiskPill/RiskMeter, Chip, Tag, TokenAvatar, LiveDot, Header, BackBar, Row, Screen/Backdrop), font Space Grotesk + JetBrains Mono, sfondo aurora (asset jpg), tab bar flottante, animazioni reanimated (`.set()/.get()` per compatibilità React Compiler), haptics. Nota Android: niente `elevation` su superfici traslucide (l'ombra traspare come rettangolo scuro): il bagliore è bordo + fondo tinti. Blur scartato (su Android richiede BlurTargetView per ogni schermata). Verificato sul Seeker con screenshot di tutte le schermate.
+- `expo install` ha portato Expo 57.0.19 → 57.0.24: con i nuovi tipi un `Buffer` non è più assegnabile a `Uint8Array<ArrayBufferLike>` (fix con `new Uint8Array(...)` in validate-swap-tx e approve).
+
 ### Da fare
 - % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
