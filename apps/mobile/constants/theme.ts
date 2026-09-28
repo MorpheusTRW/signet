@@ -10,7 +10,7 @@ export const palette = {
   surfacePressed: 'rgba(255,255,255,0.10)',
   hairline: 'rgba(255,255,255,0.09)',
   hairlineStrong: 'rgba(255,255,255,0.16)',
-  tabBar: 'rgba(12,15,20,0.96)',
+  tabBar: '#0B0E13',
 
   text: '#F4F6FA',
   textSecondary: '#A3ACBA',

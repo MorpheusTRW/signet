@@ -30,8 +30,8 @@ export function TierBadge({ tier, delaySeconds }: { tier: Tier; delaySeconds?: n
         {label}
       </Text>
       {tier === 'free' && delaySeconds ? (
-        <Text variant="label" color={color + 'CC'}>
-          {`Ritardo ${delaySeconds}s`}
+        <Text variant="mono" color={color + 'CC'} style={{ fontSize: 11.5 }}>
+          · ritardo {delaySeconds}s
         </Text>
       ) : null}
     </View>

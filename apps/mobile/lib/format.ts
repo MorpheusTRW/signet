@@ -14,6 +14,7 @@ export function shortAddress(address: string, chars = 4): string {
 }
 
 export function formatSol(value: number): string {
+  if (value === 0) return '0 SOL'
   const digits = value >= 100 ? 0 : value >= 1 ? 2 : 4
   return `${value.toFixed(digits)} SOL`
 }

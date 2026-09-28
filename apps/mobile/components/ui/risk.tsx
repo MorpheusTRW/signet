@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
   },
-  dot: { width: 7, height: 7, borderRadius: 4, shadowOpacity: 0.9, shadowRadius: 6, elevation: 3 },
+  dot: { width: 7, height: 7, borderRadius: 4, shadowOpacity: 0.9, shadowRadius: 6 },
   meter: { flexDirection: 'row', gap: 3, height: 22, alignItems: 'stretch' },
   segment: { flex: 1, borderRadius: 3, shadowOpacity: 0.6, shadowRadius: 4 },
 })

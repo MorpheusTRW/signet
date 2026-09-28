@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   avatarInner: { flex: 1, backgroundColor: '#0B0F14', alignItems: 'center', justifyContent: 'center' },
   live: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   liveCore: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: palette.mint },
-  liveHalo: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: palette.mint },
+  liveHalo: { position: 'absolute', width: 8, height: 8, borderRadius: 4, borderWidth: 1, borderColor: palette.mint },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 22 },
   backBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   backButton: {
