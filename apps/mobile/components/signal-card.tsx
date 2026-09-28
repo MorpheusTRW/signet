@@ -25,7 +25,7 @@ export function SignalCard({ signal, index = 0 }: { signal: Signal; index?: numb
           <View style={[styles.edge, { backgroundColor: risk[level].color, shadowColor: risk[level].color }]} />
 
           <View style={styles.top}>
-            <TokenAvatar symbol={symbol} />
+            <TokenAvatar symbol={symbol} imageUrl={signal.imageUrl} />
             <View style={{ flex: 1, gap: 2 }}>
               <Text variant="heading" numberOfLines={1}>
                 {symbol}

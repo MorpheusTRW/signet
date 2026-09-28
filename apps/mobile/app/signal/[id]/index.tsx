@@ -52,7 +52,7 @@ export default function SignalDetailScreen() {
 
       {/* Hero del token */}
       <Animated.View entering={FadeInDown.duration(450)} style={styles.hero}>
-        <TokenAvatar symbol={symbol} size={64} />
+        <TokenAvatar symbol={symbol} imageUrl={signal.imageUrl} size={64} />
         <View style={{ flex: 1, gap: 4 }}>
           <Text variant="title" numberOfLines={1}>
             {symbol}

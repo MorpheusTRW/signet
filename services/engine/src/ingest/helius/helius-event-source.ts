@@ -3,6 +3,7 @@ import type { EventSource, LaunchPattern, RawLaunchEvent, UnverifiedAspect } fro
 import { fetchMintInfo, fetchTopHolderPercentages, fetchWalletFirstSeen, walletAgeDays } from "./enrich.js";
 import { type DailyBudget, type EnhancedApi, fetchTokenHistory, type TokenHistory } from "./history.js";
 import { parseCreatePool, type RawTransaction } from "./parse-create-pool.js";
+import { fetchTokenImage } from "./token-image.js";
 import type { RpcCall } from "./rpc.js";
 
 /**
@@ -173,7 +174,7 @@ export class HeliusEventSource implements EventSource {
       return null;
     }
 
-    const [topHolderPercentages, devFirstSeen, history] = await Promise.all([
+    const [topHolderPercentages, devFirstSeen, history, imageUrl] = await Promise.all([
       // Può fallire (es. "not a Token mint" su alcuni mint appena migrati): non scartare
       // tutto il segnale, marca solo la distribuzione come non verificata.
       fetchTopHolderPercentages(rpc, pool.tokenMint, mint.supplyRaw, [pool.poolBaseVault]).catch(
@@ -190,6 +191,7 @@ export class HeliusEventSource implements EventSource {
             },
           ).catch((): TokenHistory => ({}))
         : Promise.resolve<TokenHistory>({}),
+      mint.uri ? fetchTokenImage(mint.uri) : Promise.resolve(undefined),
     ]);
     const { previousLaunches, previousLaunchesMigrated, launch: analysis } = history;
     const snipers = analysis?.snipers;
@@ -224,6 +226,7 @@ export class HeliusEventSource implements EventSource {
       poolAddress: pool.pool,
       ...(mint.symbol && { tokenSymbol: mint.symbol }),
       ...(mint.name && { tokenName: mint.name }),
+      ...(imageUrl && { imageUrl }),
       createdAt: new Date((pool.blockTime ?? this.now() / 1000) * 1000).toISOString(),
       initialLiquiditySol: pool.initialLiquiditySol,
       topHolderPercentages: topHolderPercentages ?? [],

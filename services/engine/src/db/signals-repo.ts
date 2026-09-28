@@ -9,6 +9,7 @@ interface SignalRow {
   pool_address: string;
   token_symbol: string | null;
   token_name: string | null;
+  image_url: string | null;
   initial_liquidity_sol: number;
   risk_score: number;
   risk_level: Signal["riskReport"]["level"];
@@ -25,6 +26,7 @@ function rowToSignal(row: SignalRow): Signal {
     poolAddress: row.pool_address,
     ...(row.token_symbol !== null && { tokenSymbol: row.token_symbol }),
     ...(row.token_name !== null && { tokenName: row.token_name }),
+    ...(row.image_url !== null && { imageUrl: row.image_url }),
     initialLiquiditySol: row.initial_liquidity_sol,
     riskReport: {
       score: row.risk_score,
@@ -43,11 +45,11 @@ export class SignalsRepo {
       .prepare(
         `INSERT INTO signals (
           id, created_at, program, token_mint, pool_address,
-          token_symbol, token_name, initial_liquidity_sol,
+          token_symbol, token_name, image_url, initial_liquidity_sol,
           risk_score, risk_level, risk_reasons, summary
         ) VALUES (
           @id, @createdAt, @program, @tokenMint, @poolAddress,
-          @tokenSymbol, @tokenName, @initialLiquiditySol,
+          @tokenSymbol, @tokenName, @imageUrl, @initialLiquiditySol,
           @riskScore, @riskLevel, @riskReasons, @summary
         )`,
       )
@@ -58,6 +60,7 @@ export class SignalsRepo {
         tokenMint: signal.tokenMint,
         poolAddress: signal.poolAddress,
         tokenSymbol: signal.tokenSymbol ?? null,
+        imageUrl: signal.imageUrl ?? null,
         tokenName: signal.tokenName ?? null,
         initialLiquiditySol: signal.initialLiquiditySol,
         riskScore: signal.riskReport.score,

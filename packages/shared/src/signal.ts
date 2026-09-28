@@ -20,6 +20,8 @@ export const signalSchema = z.object({
   poolAddress: pubkeySchema,
   tokenSymbol: z.string().optional(),
   tokenName: z.string().optional(),
+  // Immagine del token dai metadati (https; IPFS riscritto su un gateway funzionante).
+  imageUrl: z.string().url().startsWith("https://").max(512).optional(),
   initialLiquiditySol: z.number().nonnegative(),
   riskReport: riskReportSchema,
   // Sintesi deterministica generata da template (nessun LLM nel percorso critico).

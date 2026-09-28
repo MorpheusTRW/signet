@@ -16,6 +16,7 @@ export function buildSignal(event: RawLaunchEvent): Signal {
     poolAddress: event.poolAddress,
     ...(event.tokenSymbol !== undefined && { tokenSymbol: event.tokenSymbol }),
     ...(event.tokenName !== undefined && { tokenName: event.tokenName }),
+    ...(event.imageUrl !== undefined && { imageUrl: event.imageUrl }),
     initialLiquiditySol: event.initialLiquiditySol,
     riskReport,
     summary: buildSummary(event, riskReport),

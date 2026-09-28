@@ -108,6 +108,14 @@ CREATE TABLE IF NOT EXISTS settings (
 
 export type DbClient = Database.Database;
 
+/** CREATE TABLE IF NOT EXISTS non aggiunge colonne a tabelle già esistenti (DB di produzione). */
+function addColumnIfMissing(db: Database.Database, table: string, column: string, type: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (!columns.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
+}
+
 export function createDb(path: string): DbClient {
   if (path !== ":memory:") {
     mkdirSync(dirname(path), { recursive: true });
@@ -115,5 +123,6 @@ export function createDb(path: string): DbClient {
   const db = new Database(path);
   db.pragma("journal_mode = WAL");
   db.exec(MIGRATIONS);
+  addColumnIfMissing(db, "signals", "image_url", "TEXT");
   return db;
 }

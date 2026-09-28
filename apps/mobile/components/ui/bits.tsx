@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
+import { Image } from 'expo-image'
 import { LinearGradient } from 'expo-linear-gradient'
 import * as Haptics from 'expo-haptics'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'
@@ -59,13 +60,15 @@ export function Tag({ children }: { children: ReactNode }) {
   )
 }
 
-/** Avatar del token: iniziali su gradiente del brand. */
-export function TokenAvatar({ symbol, size = 44 }: { symbol: string; size?: number }) {
+/** Avatar del token: immagine dai metadati se c'è, altrimenti iniziali; cornice a gradiente del brand. */
+export function TokenAvatar({ symbol, imageUrl, size = 44 }: { symbol: string; imageUrl?: string; size?: number }) {
+  const [failed, setFailed] = useState(false)
   const initials =
     symbol
       .replace(/[^A-Za-z0-9]/g, '')
       .slice(0, 2)
       .toUpperCase() || '?'
+  const inner = size / 3 - 1.5
   return (
     <LinearGradient
       colors={gradients.brand}
@@ -73,10 +76,22 @@ export function TokenAvatar({ symbol, size = 44 }: { symbol: string; size?: numb
       end={{ x: 1, y: 1 }}
       style={{ width: size, height: size, borderRadius: size / 3, padding: 1.5 }}
     >
-      <View style={[styles.avatarInner, { borderRadius: size / 3 - 1.5 }]}>
-        <Text variant="heading" style={{ fontSize: size * 0.36 }}>
-          {initials}
-        </Text>
+      <View style={[styles.avatarInner, { borderRadius: inner, overflow: 'hidden' }]}>
+        {imageUrl && !failed ? (
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: '100%', height: '100%' }}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+            onError={() => setFailed(true)}
+            accessibilityLabel={`${symbol} logo`}
+          />
+        ) : (
+          <Text variant="heading" style={{ fontSize: size * 0.36 }}>
+            {initials}
+          </Text>
+        )}
       </View>
     </LinearGradient>
   )

@@ -43,6 +43,7 @@ export interface RawLaunchEvent {
   poolAddress: string;
   tokenSymbol?: string;
   tokenName?: string;
+  imageUrl?: string;
   createdAt: string;
   initialLiquiditySol: number;
   /** % di supply per ciascuno dei top holder, ordinate in modo decrescente. */

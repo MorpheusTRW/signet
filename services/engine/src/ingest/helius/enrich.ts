@@ -18,7 +18,7 @@ interface ParsedMintAccount {
     data: {
       parsed?: {
         info?: ParsedMintInfo & {
-          extensions?: { extension: string; state?: { name?: string; symbol?: string } }[];
+          extensions?: { extension: string; state?: { name?: string; symbol?: string; uri?: string } }[];
         };
       };
     };
@@ -33,6 +33,8 @@ export interface MintInfo {
   /** Nome/simbolo se leggibili (estensione Token-2022 o metadata Metaplex), altrimenti undefined. */
   name?: string;
   symbol?: string;
+  /** URI del JSON di metadati (contiene il campo `image`). */
+  uri?: string;
 }
 
 export async function fetchMintInfo(rpc: RpcCall, mint: string): Promise<MintInfo | null> {
@@ -45,14 +47,17 @@ export async function fetchMintInfo(rpc: RpcCall, mint: string): Promise<MintInf
 
   let name: string | undefined;
   let symbol: string | undefined;
+  let uri: string | undefined;
   const ext = info.extensions?.find((e) => e.extension === "tokenMetadata");
   if (ext?.state?.name || ext?.state?.symbol) {
     name = ext.state.name;
     symbol = ext.state.symbol;
+    uri = ext.state.uri;
   } else {
     const meta = await fetchMetaplexMetadata(rpc, mint).catch(() => undefined);
     name = meta?.name;
     symbol = meta?.symbol;
+    uri = meta?.uri;
   }
 
   return {
@@ -62,6 +67,7 @@ export async function fetchMintInfo(rpc: RpcCall, mint: string): Promise<MintInf
     decimals: info.decimals,
     ...(name !== undefined && { name }),
     ...(symbol !== undefined && { symbol }),
+    ...(uri && { uri }),
   };
 }
 
@@ -75,11 +81,11 @@ function readBorshString(data: Buffer, offset: number): { value: string; next: n
   return { value, next: offset + 4 + length };
 }
 
-/** Layout Metaplex Token Metadata: key(1) updateAuthority(32) mint(32) name(str) symbol(str). */
+/** Layout Metaplex Token Metadata: key(1) updateAuthority(32) mint(32) name(str) symbol(str) uri(str). */
 async function fetchMetaplexMetadata(
   rpc: RpcCall,
   mint: string,
-): Promise<{ name: string; symbol: string } | undefined> {
+): Promise<{ name: string; symbol: string; uri: string } | undefined> {
   const [pda] = PublicKey.findProgramAddressSync(
     [Buffer.from("metadata"), METAPLEX_METADATA_PROGRAM.toBuffer(), new PublicKey(mint).toBuffer()],
     METAPLEX_METADATA_PROGRAM,
@@ -92,7 +98,8 @@ async function fetchMetaplexMetadata(
   const data = Buffer.from(account.value.data[0], "base64");
   const name = readBorshString(data, 65);
   const symbol = readBorshString(data, name.next);
-  return { name: name.value, symbol: symbol.value };
+  const uri = readBorshString(data, symbol.next);
+  return { name: name.value, symbol: symbol.value, uri: uri.value };
 }
 
 /**
