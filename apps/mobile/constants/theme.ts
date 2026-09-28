@@ -50,7 +50,7 @@ export const gradients = {
 }
 
 export const risk: Record<RiskLevel, { color: string; soft: string; label: string }> = {
-  low: { color: palette.mint, soft: palette.mintSoft, label: 'Basso' },
-  medium: { color: palette.amber, soft: palette.amberSoft, label: 'Medio' },
-  high: { color: palette.red, soft: palette.redSoft, label: 'Alto' },
+  low: { color: palette.mint, soft: palette.mintSoft, label: 'Low' },
+  medium: { color: palette.amber, soft: palette.amberSoft, label: 'Medium' },
+  high: { color: palette.red, soft: palette.redSoft, label: 'High' },
 }

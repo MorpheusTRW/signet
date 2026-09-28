@@ -16,8 +16,8 @@ export default function PositionsScreen() {
   if (!query.data) {
     return (
       <Screen>
-        <Header eyebrow="Portafoglio" title="Posizioni" />
-        <Text variant="secondary">{query.isError ? 'Impossibile caricare le posizioni.' : 'Caricamento…'}</Text>
+        <Header eyebrow="Portfolio" title="Positions" />
+        <Text variant="secondary">{query.isError ? 'Could not load positions.' : 'Loading…'}</Text>
       </Screen>
     )
   }
@@ -30,15 +30,15 @@ export default function PositionsScreen() {
 
   return (
     <Screen scroll>
-      <Header eyebrow="Portafoglio simulato" title="Posizioni" />
+      <Header eyebrow="Simulated portfolio" title="Positions" />
 
       <Animated.View entering={FadeInDown.duration(450)}>
         <Glass style={{ gap: 18 }}>
-          <Text variant="label">Esposizione aperta</Text>
+          <Text variant="label">Open exposure</Text>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
             <Text variant="number">{usedPct.toFixed(1)}%</Text>
             <Text variant="secondary" style={{ marginBottom: 8 }}>
-              su max {maxPct}%
+              of {maxPct}% max
             </Text>
           </View>
           {/* Barra verso il limite di esposizione (principio 3 di CLAUDE.md). */}
@@ -55,8 +55,8 @@ export default function PositionsScreen() {
             />
           </View>
           <View style={{ flexDirection: 'row', gap: 16 }}>
-            <Metric label="Aperto" value={formatSol(portfolio.openExposureSol)} />
-            <Metric label="Margine" value={formatSol(portfolio.remainingSol)} />
+            <Metric label="Open" value={formatSol(portfolio.openExposureSol)} />
+            <Metric label="Available" value={formatSol(portfolio.remainingSol)} />
             <Metric
               label="PnL"
               value={`${portfolio.realizedPnlSol >= 0 ? '+' : ''}${portfolio.realizedPnlSol.toFixed(3)}`}
@@ -67,9 +67,9 @@ export default function PositionsScreen() {
       </Animated.View>
 
       <Text variant="label" style={{ marginTop: 4 }}>
-        Storico
+        History
       </Text>
-      {positions.length === 0 ? <Text variant="secondary">Nessuna posizione ancora.</Text> : null}
+      {positions.length === 0 ? <Text variant="secondary">No positions yet.</Text> : null}
       {positions.map((p, index) => {
         const symbol = p.tokenSymbol?.trim() || p.tokenName?.trim() || 'Token'
         const open = p.status === 'open'
@@ -85,14 +85,14 @@ export default function PositionsScreen() {
                 <Text variant="caption">
                   {formatSol(p.sizeSol)} ·{' '}
                   {open
-                    ? `chiude ${new Date(p.closesAt).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+                    ? `closes ${new Date(p.closesAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`
                     : timeAgo(p.closedAt ?? p.openedAt)}
                 </Text>
               </View>
               {open ? (
                 <View style={[styles.badge, { backgroundColor: palette.mintSoft }]}>
                   <Text variant="label" color={palette.mint}>
-                    Aperta
+                    Open
                   </Text>
                 </View>
               ) : (

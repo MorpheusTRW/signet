@@ -12,7 +12,7 @@ export function checkInitialLiquidity(event: RawLaunchEvent): FilterCheck {
     return {
       id: "initial-liquidity",
       passed: false,
-      reason: `Liquidità iniziale molto bassa (${initialLiquiditySol} SOL)`,
+      reason: `Very low initial liquidity (${initialLiquiditySol} SOL)`,
       riskPoints: 25,
     };
   }
@@ -21,7 +21,7 @@ export function checkInitialLiquidity(event: RawLaunchEvent): FilterCheck {
     return {
       id: "initial-liquidity",
       passed: false,
-      reason: `Liquidità iniziale bassa (${initialLiquiditySol} SOL)`,
+      reason: `Low initial liquidity (${initialLiquiditySol} SOL)`,
       riskPoints: 12,
     };
   }
@@ -29,7 +29,7 @@ export function checkInitialLiquidity(event: RawLaunchEvent): FilterCheck {
   return {
     id: "initial-liquidity",
     passed: true,
-    reason: `Liquidità iniziale adeguata (${initialLiquiditySol} SOL)`,
+    reason: `Adequate initial liquidity (${initialLiquiditySol} SOL)`,
     riskPoints: 0,
   };
 }

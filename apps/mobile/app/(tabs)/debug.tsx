@@ -17,8 +17,8 @@ export default function DebugScreen() {
       <View style={appStyles.stack}>
         <Text style={appStyles.title}>Debug</Text>
         <Text style={appStyles.textMuted}>
-          Firma una transazione minima (memo, {AppConfig.cluster.label}) per verificare la firma biometrica via Mobile
-          Wallet Adapter sul Seeker. Non muove fondi.
+          Signs a minimal transaction (memo, {AppConfig.cluster.label}) to test biometric signing via Mobile Wallet
+          Adapter sul Seeker. Non muove fondi.
         </Text>
 
         {!account ? (
@@ -29,7 +29,7 @@ export default function DebugScreen() {
               <Text style={appStyles.textMuted}>Connesso: {ellipsify(account.address.toBase58(), 8)}</Text>
             </View>
             <AppActionButton
-              title="Firma tx di debug (memo)"
+              title="Sign debug tx (memo)"
               onPress={async () => {
                 const {
                   context: { slot: minContextSlot },
@@ -46,7 +46,7 @@ export default function DebugScreen() {
 
                 await connection.confirmTransaction({ signature, ...latestBlockhash }, 'confirmed')
 
-                return { description: signature, status: 'success', title: 'Tx confermata' } as const
+                return { description: signature, status: 'success', title: 'Tx confirmed' } as const
               }}
             />
           </View>

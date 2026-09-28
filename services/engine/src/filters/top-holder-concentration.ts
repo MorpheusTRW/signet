@@ -12,7 +12,7 @@ export function checkTopHolderConcentration(
     return {
       id: "top-holder-concentration",
       passed: false,
-      reason: "Distribuzione dei top holder non verificata",
+      reason: "Top holder distribution unverified",
       riskPoints: 5,
     };
   }
@@ -23,7 +23,7 @@ export function checkTopHolderConcentration(
     return {
       id: "top-holder-concentration",
       passed: false,
-      reason: `Top 10 holder detengono ${rounded}% della supply (concentrazione molto alta)`,
+      reason: `Top 10 holders own ${rounded}% of supply (very high concentration)`,
       riskPoints: 35,
     };
   }
@@ -32,7 +32,7 @@ export function checkTopHolderConcentration(
     return {
       id: "top-holder-concentration",
       passed: false,
-      reason: `Top 10 holder detengono ${rounded}% della supply (concentrazione elevata)`,
+      reason: `Top 10 holders own ${rounded}% of supply (high concentration)`,
       riskPoints: 18,
     };
   }
@@ -40,7 +40,7 @@ export function checkTopHolderConcentration(
   return {
     id: "top-holder-concentration",
     passed: true,
-    reason: `Top 10 holder detengono ${rounded}% della supply`,
+    reason: `Top 10 holders own ${rounded}% of supply`,
     riskPoints: 0,
   };
 }

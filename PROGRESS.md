@@ -153,6 +153,8 @@
 - **Redesign UI "Obsidian"** (app): design system in `constants/theme.ts` + `components/ui/*` (Text, Glass, Button, RiskPill/RiskMeter, Chip, Tag, TokenAvatar, LiveDot, Header, BackBar, Row, Screen/Backdrop), font Space Grotesk + JetBrains Mono, sfondo aurora (asset jpg), tab bar flottante, animazioni reanimated (`.set()/.get()` per compatibilità React Compiler), haptics. Nota Android: niente `elevation` su superfici traslucide (l'ombra traspare come rettangolo scuro): il bagliore è bordo + fondo tinti. Blur scartato (su Android richiede BlurTargetView per ogni schermata). Verificato sul Seeker con screenshot di tutte le schermate.
 - `expo install` ha portato Expo 57.0.19 → 57.0.24: con i nuovi tipi un `Buffer` non è più assegnabile a `Uint8Array<ArrayBufferLike>` (fix con `new Uint8Array(...)` in validate-swap-tx e approve).
 
+- **App e testi del server in inglese** (pubblico target su X): tutte le schermate, motivi di rischio, sintesi ("New PumpSwap pool. Clean dev. 3 wallets sniped. Risk: Low."), notifiche push, messaggi di errore di `/build-swap` e pagina `/privacy`. Solo inglese, niente i18n (scelta voluta); commenti del codice restano in italiano. I segnali già salvati nel DB restano con testi in italiano.
+
 ### Da fare
 - % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 

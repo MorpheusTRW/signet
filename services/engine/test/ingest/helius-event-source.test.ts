@@ -127,8 +127,8 @@ describe("HeliusEventSource", () => {
     expect(e.devWalletHistory.previousLaunches).toBe(0);
     expect(e.devWalletHistory.previousLaunchesMigrated).toBe(0);
     const signal = buildSignal(e);
-    expect(signal.summary).toContain("Nessun lancio precedente del dev trovato");
-    expect(signal.summary).toContain("Nessuno snipe rilevato");
+    expect(signal.summary).toContain("No previous dev launches found");
+    expect(signal.summary).toContain("No snipes detected");
     source.stop();
   });
 
@@ -138,9 +138,9 @@ describe("HeliusEventSource", () => {
     source.start((e) => events.push(e));
     await source.handleMessage(notification("SIG1", CREATE_POOL_LOGS));
     const signal = buildSignal(events[0]!);
-    expect(signal.summary).not.toContain("Dev pulito");
-    expect(signal.summary).not.toContain("Nessuno snipe");
-    expect(signal.summary).toContain("non verificat");
+    expect(signal.summary).not.toContain("Clean dev");
+    expect(signal.summary).not.toContain("No snipes");
+    expect(signal.summary).toContain("unverified");
     source.stop();
   });
 

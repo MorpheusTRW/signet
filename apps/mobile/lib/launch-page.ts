@@ -8,7 +8,7 @@ import type { Signal } from '@seeker-signal/shared'
 export function launchPage(signal: Pick<Signal, 'program' | 'tokenMint'>): { label: string; url: string } {
   const mint = encodeURIComponent(signal.tokenMint)
   if (signal.program === 'pump-fun' || signal.program === 'pumpswap') {
-    return { label: 'Apri su pump.fun', url: `https://pump.fun/coin/${mint}` }
+    return { label: 'Open on pump.fun', url: `https://pump.fun/coin/${mint}` }
   }
-  return { label: 'Apri su Solscan', url: `https://solscan.io/token/${mint}` }
+  return { label: 'Open on Solscan', url: `https://solscan.io/token/${mint}` }
 }

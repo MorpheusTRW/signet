@@ -9,7 +9,7 @@ export function checkAuthorities(event: RawLaunchEvent): FilterCheck {
     return {
       id: "authorities",
       passed: false,
-      reason: "Mint e freeze authority non revocate",
+      reason: "Mint and freeze authority not revoked",
       riskPoints: 30,
     };
   }
@@ -18,7 +18,7 @@ export function checkAuthorities(event: RawLaunchEvent): FilterCheck {
     return {
       id: "authorities",
       passed: false,
-      reason: "Mint authority non revocata",
+      reason: "Mint authority not revoked",
       riskPoints: 20,
     };
   }
@@ -27,7 +27,7 @@ export function checkAuthorities(event: RawLaunchEvent): FilterCheck {
     return {
       id: "authorities",
       passed: false,
-      reason: "Freeze authority non revocata",
+      reason: "Freeze authority not revoked",
       riskPoints: 15,
     };
   }
@@ -35,7 +35,7 @@ export function checkAuthorities(event: RawLaunchEvent): FilterCheck {
   return {
     id: "authorities",
     passed: true,
-    reason: "Mint e freeze authority revocate",
+    reason: "Mint and freeze authority revoked",
     riskPoints: 0,
   };
 }

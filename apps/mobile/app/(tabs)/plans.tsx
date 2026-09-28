@@ -18,26 +18,26 @@ const PLANS: { tier: Tier; title: string; subtitle: string; feeBps: number; colo
   {
     tier: 'free',
     title: 'Free',
-    subtitle: 'Per iniziare',
+    subtitle: 'Get started',
     feeBps: 75,
     color: palette.textSecondary,
-    benefits: ['Segnali con ritardo', 'Filtri base', 'Storico ultime 24h'],
+    benefits: ['Delayed signals', 'Basic filters', 'Last 24h history'],
   },
   {
     tier: 'pro',
     title: 'Pro',
-    subtitle: '30 giorni · USDC o SKR',
+    subtitle: '30 days · USDC or SKR',
     feeBps: 50,
     color: palette.mint,
-    benefits: ['Segnali in tempo reale', 'Filtri personalizzati', 'Storico completo'],
+    benefits: ['Real-time signals', 'Custom filters', 'Full history'],
   },
   {
     tier: 'holder',
     title: 'Holder',
-    subtitle: 'SKR in saldo o in stake',
+    subtitle: 'Hold or stake SKR',
     feeBps: 30,
     color: palette.violet,
-    benefits: ['Tutto Pro, gratis', 'Fee più basse sugli swap'],
+    benefits: ['Everything in Pro, free', 'Lowest swap fees'],
   },
 ]
 
@@ -48,8 +48,8 @@ export default function PlansScreen() {
 
   return (
     <Screen scroll>
-      <Header eyebrow="Accesso" title="Piani" />
-      {!pubkey ? <Text variant="secondary">Connetti il wallet per vedere il tuo piano attuale.</Text> : null}
+      <Header eyebrow="Access" title="Plans" />
+      {!pubkey ? <Text variant="secondary">Connect your wallet to see your current plan.</Text> : null}
 
       {PLANS.map((plan, index) => {
         const isCurrent = tierQuery.data?.tier === plan.tier
@@ -66,7 +66,7 @@ export default function PlansScreen() {
                 {isCurrent ? (
                   <View style={[styles.current, { borderColor: plan.color + '66' }]}>
                     <Text variant="label" color={plan.color}>
-                      Attuale
+                      Current
                     </Text>
                   </View>
                 ) : null}
@@ -85,9 +85,9 @@ export default function PlansScreen() {
                 ))}
               </View>
 
-              <Text variant="mono">FEE SWAP {plan.feeBps / 100}%</Text>
+              <Text variant="mono">SWAP FEE {plan.feeBps / 100}%</Text>
               {plan.tier !== 'free' && !isCurrent ? (
-                <Button title="Presto disponibile" variant="ghost" disabled onPress={() => {}} />
+                <Button title="Coming soon" variant="ghost" disabled onPress={() => {}} />
               ) : null}
             </Glass>
           </Animated.View>

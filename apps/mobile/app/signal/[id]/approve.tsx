@@ -16,27 +16,27 @@ import { buildSwap, BuildSwapError, getPositions, getStatus } from '@/lib/api/cl
 import { useSettings } from '@/lib/settings/settings'
 
 const VALIDATION_REASON_LABELS: Record<string, string> = {
-  fee_payer_mismatch: 'Il fee payer della transazione non è il tuo wallet.',
-  unresolvable_program: 'Impossibile risolvere un program della transazione.',
-  amount_exceeds_cap: "L'importo supera quanto hai approvato per questa entry.",
-  fee_account_mismatch: "La transazione non include l'account fee atteso.",
-  fee_bps_exceeds_cap: 'La fee reale supera il limite consentito per il tuo tier.',
-  fee_simulation_failed: 'Non è stato possibile verificare la fee reale (simulazione fallita).',
+  fee_payer_mismatch: 'The transaction fee payer is not your wallet.',
+  unresolvable_program: 'Could not resolve a program in the transaction.',
+  amount_exceeds_cap: 'The amount exceeds what you approved for this entry.',
+  fee_account_mismatch: 'The transaction does not include the expected fee account.',
+  fee_bps_exceeds_cap: 'The actual fee exceeds the limit for your plan.',
+  fee_simulation_failed: 'Could not verify the actual fee (simulation failed).',
 }
 
 function describeValidationFailure(reason: string): string {
   if (VALIDATION_REASON_LABELS[reason]) return VALIDATION_REASON_LABELS[reason]
-  if (reason.startsWith('program_not_allowed:')) return `Program non in allowlist: ${reason.split(':')[1]}`
+  if (reason.startsWith('program_not_allowed:')) return `Program not allowlisted: ${reason.split(':')[1]}`
   if (reason.startsWith('unknown_transfer_destination:')) {
-    return `Trasferimento verso un indirizzo sconosciuto: ${reason.split(':')[1]}`
+    return `Transfer to an unknown address: ${reason.split(':')[1]}`
   }
-  return `Validazione fallita: ${reason}`
+  return `Validation failed: ${reason}`
 }
 
 function Blocked({ title, message }: { title: string; message: string }) {
   return (
     <Screen tabBar={false}>
-      <BackBar title="Conferma entry" />
+      <BackBar title="Confirm entry" />
       <Glass glow={palette.red} style={{ marginTop: 12 }}>
         <Text variant="heading" color={palette.red}>
           {title}
@@ -66,11 +66,11 @@ export default function ApproveEntryScreen() {
       // Ricontrollo lato app (CLAUDE.md, principio 3): il server applica già gli
       // stessi limiti, ma l'app non si fida ciecamente e blocca prima di costruire.
       const status = await getStatus()
-      if (status.killSwitch) throw new Error('Trading sospeso dal servizio (kill switch attivo).')
+      if (status.killSwitch) throw new Error('Trading paused by the service (kill switch on).')
       const { portfolio } = await getPositions()
       if (amountSol > portfolio.remainingSol) {
         throw new Error(
-          `Supereresti il limite del ${portfolio.maxExposureFraction * 100}% di esposizione: margine residuo ${portfolio.remainingSol.toFixed(4)} SOL.`,
+          `This would exceed the ${portfolio.maxExposureFraction * 100}% exposure limit: ${portfolio.remainingSol.toFixed(4)} SOL available.`,
         )
       }
       return buildSwap({ signalId: id, pubkey: pubkey!, amountSol, slippageBps })
@@ -82,8 +82,8 @@ export default function ApproveEntryScreen() {
   if (settings.killSwitch) {
     return (
       <Blocked
-        title="Kill switch attivo"
-        message="Nuove entry bloccate su questo dispositivo. Puoi disattivarlo da Opzioni."
+        title="Kill switch on"
+        message="New entries are blocked on this device. You can turn it off in Settings."
       />
     )
   }
@@ -91,8 +91,8 @@ export default function ApproveEntryScreen() {
   if (!pubkey) {
     return (
       <Screen tabBar={false}>
-        <BackBar title="Conferma entry" />
-        <Text variant="secondary">Connetti il wallet per continuare.</Text>
+        <BackBar title="Confirm entry" />
+        <Text variant="secondary">Connect your wallet to continue.</Text>
         <ConnectWalletButton />
       </Screen>
     )
@@ -101,10 +101,10 @@ export default function ApproveEntryScreen() {
   if (buildQuery.isLoading) {
     return (
       <Screen tabBar={false}>
-        <BackBar title="Conferma entry" />
+        <BackBar title="Confirm entry" />
         <Glass style={{ marginTop: 12, alignItems: 'center', paddingVertical: 40 }}>
-          <Text variant="heading">Costruzione della transazione…</Text>
-          <Text variant="secondary">Quote e blockhash aggiornati in questo istante.</Text>
+          <Text variant="heading">Building the transaction…</Text>
+          <Text variant="secondary">Fresh quote and blockhash, right now.</Text>
         </Glass>
       </Screen>
     )
@@ -117,20 +117,20 @@ export default function ApproveEntryScreen() {
         ? (error.body.message ?? error.body.error)
         : error instanceof Error
           ? error.message
-          : 'Errore sconosciuto'
-    return <Blocked title="Swap non disponibile" message={message} />
+          : 'Unknown error'
+    return <Blocked title="Swap unavailable" message={message} />
   }
 
   const build = buildQuery.data
   const receive =
-    build.quote.outAmountUi !== null ? build.quote.outAmountUi.toLocaleString('it-IT') : build.quote.outAmount
+    build.quote.outAmountUi !== null ? build.quote.outAmountUi.toLocaleString('en-US') : build.quote.outAmount
 
   return (
     <Screen scroll tabBar={false}>
-      <BackBar title="Conferma entry" />
+      <BackBar title="Confirm entry" />
 
       <Animated.View entering={FadeInDown.duration(450)} style={{ gap: 6, marginTop: 8 }}>
-        <Text variant="label">Spendi</Text>
+        <Text variant="label">You spend</Text>
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
           <Text variant="number" style={{ fontSize: 56, lineHeight: 60 }}>
             {build.amountSol}
@@ -139,16 +139,16 @@ export default function ApproveEntryScreen() {
             SOL
           </Text>
         </View>
-        <Text variant="secondary">Ricevi circa {receive} token</Text>
+        <Text variant="secondary">You receive ~{receive} tokens</Text>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(450).delay(80)}>
         <Glass style={{ gap: 14 }}>
-          <Row label="Fee piattaforma" value={`${build.feeBps / 100}% · ${build.feeSol.toFixed(6)} SOL`} />
+          <Row label="Platform fee" value={`${build.feeBps / 100}% · ${build.feeSol.toFixed(6)} SOL`} />
           <Divider />
-          <Row label="Slippage massimo" value={`${build.quote.slippageBps / 100}%`} />
+          <Row label="Max slippage" value={`${build.quote.slippageBps / 100}%`} />
           <Divider />
-          <Row label="Impatto sul prezzo" value={`${build.quote.priceImpactPct}%`} />
+          <Row label="Price impact" value={`${build.quote.priceImpactPct}%`} />
         </Glass>
       </Animated.View>
 
@@ -156,10 +156,10 @@ export default function ApproveEntryScreen() {
         <Animated.View entering={FadeInDown.duration(450).delay(140)}>
           <Glass glow={palette.amber}>
             <Text variant="label" color={palette.amber}>
-              Modalità paper
+              Paper mode
             </Text>
             <Text variant="secondary">
-              La transazione viene costruita e verificata, ma non firmata né inviata: nessun fondo reale si muove.
+              The transaction is built and verified but never signed or sent: no real funds move.
             </Text>
           </Glass>
         </Animated.View>
@@ -167,7 +167,7 @@ export default function ApproveEntryScreen() {
 
       <Animated.View entering={FadeInDown.duration(450).delay(200)} style={{ gap: 10 }}>
         <AppActionButton
-          title={build.tradingMode === 'paper' ? 'Verifica (paper)' : 'Firma e invia'}
+          title={build.tradingMode === 'paper' ? 'Verify (paper)' : 'Sign & send'}
           onPress={async () => {
             const transaction = VersionedTransaction.deserialize(
               new Uint8Array(Buffer.from(build.transactionBase64, 'base64')),
@@ -185,7 +185,7 @@ export default function ApproveEntryScreen() {
             if (!validation.valid) {
               return {
                 status: 'danger',
-                title: 'Validazione fallita: non firmare',
+                title: 'Validation failed: do not sign',
                 description: describeValidationFailure(validation.reason),
               } as const
             }
@@ -193,8 +193,8 @@ export default function ApproveEntryScreen() {
             if (build.tradingMode === 'paper') {
               return {
                 status: 'success',
-                title: 'Transazione verificata',
-                description: 'Tutti i controlli superati. Nessuna transazione reale inviata (paper mode).',
+                title: 'Transaction verified',
+                description: 'All checks passed. No real transaction sent (paper mode).',
               } as const
             }
 
@@ -205,11 +205,11 @@ export default function ApproveEntryScreen() {
               'confirmed',
             )
 
-            return { status: 'success', title: 'Entry confermata on-chain', description: signature } as const
+            return { status: 'success', title: 'Entry confirmed on-chain', description: signature } as const
           }}
         />
         <Text variant="caption" style={{ textAlign: 'center' }}>
-          Prima della firma l&apos;app verifica fee payer, program, importo e destinatari.
+          Before you sign, the app checks fee payer, programs, amount and recipients.
         </Text>
       </Animated.View>
     </Screen>

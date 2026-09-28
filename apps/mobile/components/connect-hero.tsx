@@ -36,10 +36,11 @@ export function ConnectHero({ subtitle }: { subtitle?: string }) {
             Seeker Signal
           </Text>
           <Text variant="display" style={{ fontSize: 40, lineHeight: 44 }}>
-            Segnali on-chain.{'\n'}Firmi tu, in un tocco.
+            On-chain signals.{'\n'}You sign, in one tap.
           </Text>
           <Text variant="secondary" style={{ fontSize: 16, lineHeight: 23 }}>
-            {subtitle ?? 'Ogni nuovo token passa filtri anti-rug in tempo reale. Le tue chiavi restano nel Seed Vault.'}
+            {subtitle ??
+              'Every new token runs through real-time anti-rug filters. Your keys never leave the Seed Vault.'}
           </Text>
         </Animated.View>
 

@@ -39,7 +39,7 @@ export function AppActionButton({
       }
     } catch (error) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-      setStatus({ description: formatError(error), status: 'danger', title: `${title}: errore` })
+      setStatus({ description: formatError(error), status: 'danger', title: `${title}: failed` })
     } finally {
       setIsLoading(false)
     }

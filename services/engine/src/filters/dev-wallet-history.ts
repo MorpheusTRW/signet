@@ -7,9 +7,9 @@ const SERIAL_MAX_MIGRATION_RATE = 0.1;
 const REPEAT_LAUNCHES = 3;
 
 function launchesLabel(launches: number, migrated: number): string {
-  const m = migrated === 1 ? "1 migrato" : `${migrated} migrati`;
-  const l = launches === 1 ? "1 lancio precedente" : `${launches} lanci precedenti`;
-  return `almeno ${l}, ${m}`;
+  const m = `${migrated} migrated`;
+  const l = launches === 1 ? "1 previous launch" : `${launches} previous launches`;
+  return `at least ${l}, ${m}`;
 }
 
 /** Storico del wallet dev: rug precedenti, lanci seriali e wallet appena creato sono forti segnali di rischio. */
@@ -21,7 +21,7 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
     return {
       id: "dev-wallet-history",
       passed: false,
-      reason: `Dev con ${previousRugs} rug precedenti`,
+      reason: `Dev with ${previousRugs} previous rugs`,
       riskPoints: Math.min(50, 20 + previousRugs * 10),
     };
   }
@@ -35,7 +35,7 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
       return {
         id: "dev-wallet-history",
         passed: false,
-        reason: `Dev seriale: ${launchesLabel(previousLaunches, previousLaunchesMigrated)}`,
+        reason: `Serial dev: ${launchesLabel(previousLaunches, previousLaunchesMigrated)}`,
         // Backtest 2026-09-26: tutti i token di dev seriali hanno perso oltre l'80%.
         riskPoints: 50,
       };
@@ -44,7 +44,7 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
       return {
         id: "dev-wallet-history",
         passed: false,
-        reason: `Dev con ${launchesLabel(previousLaunches, 0)}`,
+        reason: `Dev with ${launchesLabel(previousLaunches, 0)}`,
         riskPoints: 12,
       };
     }
@@ -55,7 +55,7 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
     return {
       id: "dev-wallet-history",
       passed: false,
-      reason: `Wallet dev creato ${walletAgeDays} giorni fa (nessuno storico)`,
+      reason: `Dev wallet created ${walletAgeDays} days ago (no history)`,
       riskPoints: 12,
     };
   }
@@ -65,7 +65,7 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
     return {
       id: "dev-wallet-history",
       passed: false,
-      reason: `Storico rug del dev non verificato (wallet attivo da ${walletAgeDays} giorni)`,
+      reason: `Dev rug history unverified (wallet active for ${walletAgeDays} days)`,
       riskPoints: 5,
     };
   }
@@ -73,7 +73,7 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
   return {
     id: "dev-wallet-history",
     passed: true,
-    reason: "Dev pulito",
+    reason: "Clean dev",
     riskPoints: 0,
   };
 }

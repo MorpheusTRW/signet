@@ -17,7 +17,7 @@ describe("buildSummary", () => {
     });
 
     expect(summary).toBe(
-      "Nuova pool Meteora. Dev pulito. Snipe di 3 wallet. Rischio: Basso.",
+      "New Meteora pool. Clean dev. 3 wallets sniped. Risk: Low.",
     );
   });
 
@@ -42,7 +42,7 @@ describe("buildSummary", () => {
     });
 
     expect(summary).toBe(
-      "Nuova pool Raydium LaunchLab. Dev con 4 rug precedenti. Nessuno snipe rilevato. Rischio: Alto.",
+      "New Raydium LaunchLab pool. Dev with 4 previous rugs. No snipes detected. Risk: High.",
     );
   });
 
@@ -54,7 +54,7 @@ describe("buildSummary", () => {
       unverified: ["dev-rugs"],
     });
     expect(buildSummary(event, { score: 60, level: "medium", reasons: [] })).toBe(
-      "Nuova pool PumpSwap. Dev con almeno 26 lanci, 1 migrato. Snipe di 1 wallet. Rischio: Medio.",
+      "New PumpSwap pool. Dev: at least 26 launches, 1 migrated. 1 wallet sniped. Risk: Medium.",
     );
   });
 });

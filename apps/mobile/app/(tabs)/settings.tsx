@@ -17,7 +17,7 @@ export default function SettingsScreen() {
   if (!loaded) {
     return (
       <Screen>
-        <Header eyebrow="Preferenze" title="Opzioni" />
+        <Header eyebrow="Preferences" title="Settings" />
       </Screen>
     )
   }
@@ -39,10 +39,10 @@ function SettingsForm() {
 
   return (
     <Screen scroll>
-      <Header eyebrow="Preferenze" title="Opzioni" />
+      <Header eyebrow="Preferences" title="Settings" />
 
       <Glass style={{ gap: 16 }}>
-        <Text variant="label">Importo predefinito</Text>
+        <Text variant="label">Default amount</Text>
         <View style={styles.amountRow}>
           <TextInput
             style={styles.amountInput}
@@ -57,7 +57,7 @@ function SettingsForm() {
           </Text>
         </View>
         <Divider />
-        <Text variant="label">Slippage predefinito</Text>
+        <Text variant="label">Default slippage</Text>
         <View style={styles.chips}>
           {SLIPPAGE_PRESETS.map((bps) => (
             <Chip
@@ -76,7 +76,7 @@ function SettingsForm() {
             <Text variant="heading" color={settings.killSwitch ? palette.red : palette.text}>
               Kill switch
             </Text>
-            <Text variant="secondary">Blocca ogni nuova entry su questo telefono. Le posizioni aperte restano.</Text>
+            <Text variant="secondary">Blocks every new entry on this phone. Open positions are kept.</Text>
           </View>
           <Switch
             value={settings.killSwitch}
@@ -88,29 +88,27 @@ function SettingsForm() {
       </Glass>
 
       <Glass style={{ gap: 14 }}>
-        <Text variant="label">Servizio</Text>
+        <Text variant="label">Service</Text>
         <Row
-          label="Stato"
-          value={
-            status.data ? (serviceOk ? 'Operativo' : 'Trading sospeso') : status.isError ? 'Non raggiungibile' : '…'
-          }
+          label="Status"
+          value={status.data ? (serviceOk ? 'Operational' : 'Trading paused') : status.isError ? 'Unreachable' : '…'}
           valueColor={status.data ? (serviceOk ? palette.mint : palette.red) : palette.textSecondary}
         />
         <Divider />
         <Row
-          label="Modalità"
-          value={status.data ? (status.data.tradingMode === 'paper' ? 'Paper (simulata)' : 'Live') : '…'}
+          label="Mode"
+          value={status.data ? (status.data.tradingMode === 'paper' ? 'Paper (simulated)' : 'Live') : '…'}
           valueColor={status.data?.tradingMode === 'live' ? palette.amber : undefined}
         />
       </Glass>
 
       <Glass style={{ gap: 8 }}>
-        <Text variant="label">Avvertenze</Text>
+        <Text variant="label">Disclaimer</Text>
         <Text variant="secondary">
-          Seeker Signal non è consulenza finanziaria. I segnali sono generati automaticamente da regole sui dati
-          on-chain e non garantiscono alcun risultato: i token appena lanciati sono estremamente rischiosi e puoi
-          perdere l&apos;intero importo. Non gestiamo mai le tue chiavi: ogni operazione è firmata da te dal tuo wallet.
-          Su ogni swap è applicata una fee di piattaforma, mostrata prima della firma.
+          Seeker Signal is not financial advice. Signals are generated automatically from rules on on-chain data and
+          guarantee no outcome: newly launched tokens are extremely risky and you can lose your entire amount. We never
+          hold your keys: every trade is signed by you in your own wallet. A platform fee applies to every swap and is
+          always shown before you sign.
         </Text>
       </Glass>
     </Screen>

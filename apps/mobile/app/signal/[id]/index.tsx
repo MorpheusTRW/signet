@@ -34,7 +34,7 @@ export default function SignalDetailScreen() {
     return (
       <Screen tabBar={false}>
         <BackBar />
-        <Text variant="secondary">{query.isLoading ? 'Caricamento…' : 'Segnale non trovato.'}</Text>
+        <Text variant="secondary">{query.isLoading ? 'Loading…' : 'Signal not found.'}</Text>
       </Screen>
     )
   }
@@ -48,7 +48,7 @@ export default function SignalDetailScreen() {
 
   return (
     <Screen scroll tabBar={false}>
-      <BackBar title="Segnale" />
+      <BackBar title="Signal" />
 
       {/* Hero del token */}
       <Animated.View entering={FadeInDown.duration(450)} style={styles.hero}>
@@ -91,7 +91,7 @@ export default function SignalDetailScreen() {
         <Glass glow={risk[level].color} style={{ gap: 16 }}>
           <View style={styles.riskTop}>
             <View>
-              <Text variant="label">Punteggio di rischio</Text>
+              <Text variant="label">Risk score</Text>
               <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 4 }}>
                 <Text variant="number" color={risk[level].color}>
                   {signal.riskReport.score}
@@ -119,7 +119,7 @@ export default function SignalDetailScreen() {
 
       <Animated.View entering={FadeInDown.duration(450).delay(180)}>
         <Glass>
-          <Text variant="label">Sintesi</Text>
+          <Text variant="label">Summary</Text>
           <Text variant="body">{signal.summary}</Text>
         </Glass>
       </Animated.View>
@@ -127,8 +127,8 @@ export default function SignalDetailScreen() {
       <Animated.View entering={FadeInDown.duration(450).delay(240)}>
         <Glass style={{ gap: 18 }}>
           <View style={styles.grid}>
-            <Metric label="Liquidità" value={formatSol(signal.initialLiquiditySol)} />
-            <Metric label="Rilevato" value={timeAgo(signal.createdAt)} />
+            <Metric label="Liquidity" value={formatSol(signal.initialLiquiditySol)} />
+            <Metric label="Detected" value={timeAgo(signal.createdAt)} />
           </View>
           <View style={styles.grid}>
             <Metric label="Pool" value={shortAddress(signal.poolAddress)} mono />
@@ -140,7 +140,7 @@ export default function SignalDetailScreen() {
       {/* Entry: importo, slippage, azione principale */}
       <Animated.View entering={FadeInDown.duration(450).delay(300)}>
         <Glass style={{ gap: 16 }}>
-          <Text variant="label">Importo</Text>
+          <Text variant="label">Amount</Text>
           <View style={styles.amountRow}>
             <TextInput
               style={styles.amountInput}
@@ -166,7 +166,7 @@ export default function SignalDetailScreen() {
             ))}
           </View>
 
-          <Text variant="label">Slippage massimo</Text>
+          <Text variant="label">Max slippage</Text>
           <View style={styles.chips}>
             {SLIPPAGE_PRESETS.map((bps) => (
               <Chip
@@ -179,7 +179,7 @@ export default function SignalDetailScreen() {
           </View>
 
           <Button
-            title="Approva entry"
+            title="Approve entry"
             disabled={!amountValid}
             onPress={() =>
               router.push({
@@ -189,7 +189,7 @@ export default function SignalDetailScreen() {
             }
           />
           <Text variant="caption" style={{ textAlign: 'center' }}>
-            La transazione viene costruita al momento e verificata prima della firma.
+            The transaction is built on the spot and verified before you sign.
           </Text>
         </Glass>
       </Animated.View>

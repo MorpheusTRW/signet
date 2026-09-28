@@ -1,12 +1,12 @@
-/** "adesso", "3 min fa", "2 h fa", "4 g fa". */
+/** "just now", "3m ago", "2h ago", "4d ago". */
 export function timeAgo(iso: string, now: number = Date.now()): string {
   const seconds = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000))
-  if (seconds < 45) return 'adesso'
+  if (seconds < 45) return 'just now'
   const minutes = Math.round(seconds / 60)
-  if (minutes < 60) return `${minutes} min fa`
+  if (minutes < 60) return `${minutes}m ago`
   const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours} h fa`
-  return `${Math.round(hours / 24)} g fa`
+  if (hours < 24) return `${hours}h ago`
+  return `${Math.round(hours / 24)}d ago`
 }
 
 export function shortAddress(address: string, chars = 4): string {

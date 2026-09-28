@@ -10,48 +10,47 @@ const PROGRAM_LABELS: Record<SourceProgram, string> = {
 };
 
 const RISK_LEVEL_LABELS: Record<RiskReport["level"], string> = {
-  low: "Basso",
-  medium: "Medio",
-  high: "Alto",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
 };
 
 function devClause(event: RawLaunchEvent): string {
   const { previousRugs, previousLaunches, previousLaunchesMigrated } = event.devWalletHistory;
-  if (previousRugs > 0) return `Dev con ${previousRugs} rug precedenti`;
-  if (event.unverified?.includes("dev-launches")) return "Storico dev non verificato";
+  if (previousRugs > 0) return `Dev with ${previousRugs} previous rugs`;
+  if (event.unverified?.includes("dev-launches")) return "Dev history unverified";
   if (previousLaunchesMigrated !== undefined) {
-    if (previousLaunches === 0) return "Nessun lancio precedente del dev trovato";
-    const migrated = previousLaunchesMigrated === 1 ? "1 migrato" : `${previousLaunchesMigrated} migrati`;
-    const launches = previousLaunches === 1 ? "1 lancio" : `${previousLaunches} lanci`;
-    return `Dev con almeno ${launches}, ${migrated}`;
+    if (previousLaunches === 0) return "No previous dev launches found";
+    const launches = previousLaunches === 1 ? "1 launch" : `${previousLaunches} launches`;
+    return `Dev: at least ${launches}, ${previousLaunchesMigrated} migrated`;
   }
-  if (event.unverified?.includes("dev-rugs")) return "Storico dev non verificato";
-  return "Dev pulito";
+  if (event.unverified?.includes("dev-rugs")) return "Dev history unverified";
+  return "Clean dev";
 }
 
 function snipeClause(event: RawLaunchEvent): string {
   const { snipedWalletsCount } = event;
-  if (event.unverified?.includes("snipes")) return "Snipe non verificati";
+  if (event.unverified?.includes("snipes")) return "Snipes unverified";
   return snipedWalletsCount > 0
-    ? `Snipe di ${snipedWalletsCount} wallet`
-    : "Nessuno snipe rilevato";
+    ? `${snipedWalletsCount} ${snipedWalletsCount === 1 ? "wallet" : "wallets"} sniped`
+    : "No snipes detected";
 }
 
 /** I fattori di rischio più forti emersi dal backtest vanno in testa alla sintesi. */
 function launchClauses(event: RawLaunchEvent): string[] {
   const clauses: string[] = [];
   if (event.launch && event.launch.minutesToMigrate <= 2) {
-    clauses.push(`Migrato ${event.launch.minutesToMigrate} min dopo il lancio.`);
+    clauses.push(`Migrated ${event.launch.minutesToMigrate} min after launch.`);
   }
   if (event.launch && event.launch.bundlePct >= 10) {
-    clauses.push(`Bundle ${event.launch.bundlePct}% al lancio.`);
+    clauses.push(`Bundle ${event.launch.bundlePct}% at launch.`);
   }
   return clauses;
 }
 
 /**
  * Sintesi deterministica da template (nessun LLM nel percorso critico), es.:
- * "Nuova pool Meteora. Dev pulito. Snipe di 3 wallet. Rischio: Basso."
+ * "New Meteora pool. Clean dev. 3 wallets sniped. Risk: Low."
  */
 export function buildSummary(
   event: RawLaunchEvent,
@@ -61,10 +60,10 @@ export function buildSummary(
   const riskLabel = RISK_LEVEL_LABELS[riskReport.level];
 
   return [
-    `Nuova pool ${programLabel}.`,
+    `New ${programLabel} pool.`,
     ...launchClauses(event),
     `${devClause(event)}.`,
     `${snipeClause(event)}.`,
-    `Rischio: ${riskLabel}.`,
+    `Risk: ${riskLabel}.`,
   ].join(" ");
 }

@@ -49,7 +49,7 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={{ gap: 14, marginBottom: 8 }}>
-            <Header eyebrow="Seeker Signal" title="Segnali" right={<LiveDot />} />
+            <Header eyebrow="Seeker Signal" title="Signals" right={<LiveDot />} />
             {tierQuery.data ? (
               <TierBadge tier={tierQuery.data.tier} delaySeconds={tierQuery.data.limits.signalDelaySeconds} />
             ) : null}
@@ -67,11 +67,11 @@ export default function FeedScreen() {
         }
         ListEmptyComponent={
           <Glass style={{ alignItems: 'center', paddingVertical: 36, gap: 8 }}>
-            <Text variant="heading">{signalsQuery.isLoading ? 'Sintonizzazione…' : 'In ascolto della chain'}</Text>
+            <Text variant="heading">{signalsQuery.isLoading ? 'Tuning in…' : 'Listening to the chain'}</Text>
             <Text variant="secondary" style={{ textAlign: 'center' }}>
               {signalsQuery.isError
-                ? 'Servizio non raggiungibile. Riprova tra poco.'
-                : 'I nuovi token compariranno qui appena superano i filtri.'}
+                ? 'Service unreachable. Try again shortly.'
+                : 'New tokens will appear here as soon as they pass the filters.'}
             </Text>
           </Glass>
         }

@@ -51,21 +51,21 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
       request.log.warn({ pubkey: body.data.pubkey }, "build-swap bloccato: kill switch attivo");
       return reply.status(503).send({
         error: "kill_switch_active",
-        message: "Trading temporaneamente sospeso.",
+        message: "Trading is temporarily paused.",
       });
     }
 
     if (!deps.rateLimiter.tryAcquire(body.data.pubkey)) {
       return reply.status(429).send({
         error: "rate_limited",
-        message: "Troppe richieste, riprova tra un minuto.",
+        message: "Too many requests, try again in a minute.",
       });
     }
 
     if (body.data.amountSol > deps.maxSwapSol) {
       return reply.status(409).send({
         error: "amount_exceeds_cap",
-        message: `Importo massimo per singola operazione: ${deps.maxSwapSol} SOL`,
+        message: `Maximum amount per trade: ${deps.maxSwapSol} SOL`,
         maxSol: deps.maxSwapSol,
       });
     }
@@ -73,7 +73,7 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
     if (!deps.connection || !deps.treasuryWalletPubkey) {
       return reply.status(503).send({
         error: "not_configured",
-        message: "SOLANA_RPC_URL e/o TREASURY_WALLET_PUBKEY non configurati",
+        message: "Swap service not configured (SOLANA_RPC_URL / TREASURY_WALLET_PUBKEY)",
       });
     }
     const connection = deps.connection;
@@ -92,7 +92,7 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
     if (!isJupiterRoutable(signal.program)) {
       return reply.status(409).send({
         error: "not_routable",
-        message: `Il program "${signal.program}" è ancora in bonding curve: Jupiter non lo instrada. Serve un adapter dedicato (non ancora implementato, vedi PROGRESS.md).`,
+        message: `This token is still on the ${signal.program} bonding curve: swaps are not supported yet.`,
       });
     }
 
@@ -102,7 +102,7 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
     if (amountSol > remaining) {
       return reply.status(409).send({
         error: "exposure_limit_exceeded",
-        message: `Limite di esposizione del 20% del portafoglio superato: margine residuo ${remaining.toFixed(4)} SOL`,
+        message: `Portfolio exposure limit (20%) exceeded: ${remaining.toFixed(4)} SOL remaining`,
         remainingSol: remaining,
       });
     }

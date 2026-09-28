@@ -44,15 +44,15 @@ describe("launch-pattern", () => {
     // Caso reale MAXWELL: un solo wallet ha preso il 60,85% nello stesso blocco della creazione.
     const check = checkDevBuy(makeRawLaunchEvent({ launch: { ...organic, devBuyPct: 0, bundleWallets: 1, bundlePct: 60.85 } }));
     expect(check.riskPoints).toBe(50);
-    expect(check.reason).toBe("Dev e bundle hanno comprato il 60.85% della supply al lancio");
+    expect(check.reason).toBe("Dev + bundle bought 60.85% of supply at launch");
     const single = checkBundle(makeRawLaunchEvent({ launch: { ...organic, bundleWallets: 1, bundlePct: 60.85 } }));
-    expect(single.reason).toContain("1 wallet ha comprato");
+    expect(single.reason).toContain("1 wallet bought");
   });
 
   it("bundle e wallet collegati", () => {
     const heavy = checkBundle(makeRawLaunchEvent({ launch: { ...organic, bundleWallets: 6, bundlePct: 24, linkedWallets: 3 } }));
     expect(heavy.riskPoints).toBe(15);
-    expect(heavy.reason).toBe("Bundle: 6 wallet hanno comprato il 24% nello stesso blocco del lancio, 3 wallet collegati");
+    expect(heavy.reason).toBe("Bundle: 6 wallets bought 24% in the launch block, 3 linked wallets");
     expect(checkBundle(makeRawLaunchEvent({ launch: { ...organic, bundlePct: 35 } })).riskPoints).toBe(30);
     expect(checkBundle(makeRawLaunchEvent({ launch: { ...organic, linkedWallets: 4 } })).riskPoints).toBe(10);
     expect(checkBundle(makeRawLaunchEvent({ launch: organic })).passed).toBe(true);
@@ -60,7 +60,7 @@ describe("launch-pattern", () => {
 
   it("wallet dev usa e getta", () => {
     expect(checkFreshDevWallet(makeRawLaunchEvent({ launch: { ...organic, devFundedMinutesBeforeLaunch: 0.02 } })).reason).toBe(
-      "Wallet dev attivato 0 min prima del lancio (usa e getta)",
+      "Dev wallet activated 0 min before launch (burner)",
     );
     expect(checkFreshDevWallet(makeRawLaunchEvent({ launch: { ...organic, devFundedMinutesBeforeLaunch: null } })).passed).toBe(true);
   });

@@ -5,7 +5,7 @@ export function ConnectWalletButton() {
   const { connect } = useMobileWallet()
   return (
     <AppActionButton
-      title="Connetti wallet"
+      title="Connect wallet"
       onPress={async () => {
         await connect()
       }}

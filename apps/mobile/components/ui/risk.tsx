@@ -10,7 +10,7 @@ export function RiskPill({ level, compact = false }: { level: RiskLevel; compact
     <View style={[styles.pill, { backgroundColor: soft, borderColor: color + '40' }]}>
       <View style={[styles.dot, { backgroundColor: color, shadowColor: color }]} />
       <Text variant="label" color={color} style={{ letterSpacing: 1.2 }}>
-        {compact ? label : `Rischio ${label}`}
+        {compact ? label : `${label} risk`}
       </Text>
     </View>
   )

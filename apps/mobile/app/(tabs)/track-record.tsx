@@ -17,11 +17,11 @@ export default function TrackRecordScreen() {
 
   return (
     <Screen scroll>
-      <Header eyebrow="Prestazioni dei filtri" title="Track record" />
+      <Header eyebrow="Filter performance" title="Track record" />
       {query.data ? (
         <Summary discarded={query.data.discarded} signaled={query.data.signaled} />
       ) : (
-        <Text variant="secondary">{query.isError ? 'Servizio non raggiungibile.' : 'Caricamento…'}</Text>
+        <Text variant="secondary">{query.isError ? 'Service unreachable.' : 'Loading…'}</Text>
       )}
     </Screen>
   )
@@ -37,33 +37,33 @@ function Summary({ discarded, signaled }: { discarded: CategoryStats; signaled: 
       {/* La headline che deve convincere in 3 secondi. */}
       <Animated.View entering={FadeInDown.duration(450)}>
         <Glass glow={palette.red} style={{ gap: 12 }}>
-          <Text variant="label">Rug evitati</Text>
+          <Text variant="label">Rugs avoided</Text>
           {rugCatchRatePct !== null ? (
             <>
               <Text variant="number" color={palette.red} style={{ fontSize: 64, lineHeight: 68 }}>
                 {rugCatchRatePct}%
               </Text>
-              <Text variant="body">dei token scartati come rischio alto crolla oltre −90% entro 24 ore.</Text>
+              <Text variant="body">of tokens flagged as high risk drop more than −90% within 24 hours.</Text>
             </>
           ) : (
-            <Text variant="secondary">Servono ancora un po&apos; di dati per questa statistica.</Text>
+            <Text variant="secondary">Not enough data yet for this stat.</Text>
           )}
           <Text variant="caption">
-            {discarded.total} scartati · {d24.settledCount} con esito a 24h · {d24.bigLossCount} a −90% o peggio
+            {discarded.total} flagged · {d24.settledCount} with a 24h outcome · {d24.bigLossCount} at −90% or worse
           </Text>
         </Glass>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(450).delay(80)}>
         <Glass style={{ gap: 16 }}>
-          <Text variant="label">Segnali mostrati · rischio basso e medio</Text>
+          <Text variant="label">Signals shown · low & medium risk</Text>
           <View style={{ flexDirection: 'row', gap: 16 }}>
             <Metric
-              label="Media 24h"
+              label="24h avg"
               value={signedPct(s24.avgChangePct)}
               accent={s24.avgChangePct !== null && s24.avgChangePct >= 0 ? palette.mint : palette.red}
             />
-            <Metric label="Segnalati" value={String(signaled.total)} />
+            <Metric label="Signaled" value={String(signaled.total)} />
             <Metric label="≥ 2x" value={String(s24.bigGainCount)} accent={palette.mint} />
           </View>
         </Glass>
@@ -71,14 +71,14 @@ function Summary({ discarded, signaled }: { discarded: CategoryStats; signaled: 
 
       <Animated.View entering={FadeInDown.duration(450).delay(160)}>
         <Glass style={{ gap: 14 }}>
-          <Text variant="label">Dopo 1 ora</Text>
+          <Text variant="label">After 1 hour</Text>
           <Row
-            label={`Scartati (${discarded.window1h.settledCount})`}
+            label={`Flagged (${discarded.window1h.settledCount})`}
             value={signedPct(discarded.window1h.avgChangePct)}
           />
           <Divider />
           <Row
-            label={`Segnalati (${signaled.window1h.settledCount})`}
+            label={`Signaled (${signaled.window1h.settledCount})`}
             value={signedPct(signaled.window1h.avgChangePct)}
           />
         </Glass>

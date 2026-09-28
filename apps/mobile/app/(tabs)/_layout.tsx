@@ -49,12 +49,12 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: 'Segnali', tabBarIcon: tabIcon({ ios: 'bell', android: 'notifications' }) }}
+        options={{ title: 'Signals', tabBarIcon: tabIcon({ ios: 'bell', android: 'notifications' }) }}
       />
       <Tabs.Screen
         name="positions"
         options={{
-          title: 'Posizioni',
+          title: 'Positions',
           tabBarIcon: tabIcon({ ios: 'wallet.pass', android: 'account_balance_wallet' }),
         }}
       />
@@ -64,11 +64,11 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="plans"
-        options={{ title: 'Piani', tabBarIcon: tabIcon({ ios: 'star', android: 'workspace_premium' }) }}
+        options={{ title: 'Plans', tabBarIcon: tabIcon({ ios: 'star', android: 'workspace_premium' }) }}
       />
       <Tabs.Screen
         name="settings"
-        options={{ title: 'Opzioni', tabBarIcon: tabIcon({ ios: 'gearshape', android: 'tune' }) }}
+        options={{ title: 'Settings', tabBarIcon: tabIcon({ ios: 'gearshape', android: 'tune' }) }}
       />
       {/* Solo in sviluppo: firma una tx di prova su mainnet, non va mostrata agli utenti della build release. */}
       <Tabs.Screen

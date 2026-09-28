@@ -14,14 +14,14 @@ export interface SchedulePushDeps {
 }
 
 const RISK_LABELS: Record<RiskLevel, string> = {
-  low: "Basso",
-  medium: "Medio",
-  high: "Alto",
+  low: "Low",
+  medium: "Medium",
+  high: "High",
 };
 
 function buildSignalNotification(signal: Signal) {
   return {
-    title: `Nuovo segnale · Rischio ${RISK_LABELS[signal.riskReport.level]}`,
+    title: `New signal · ${RISK_LABELS[signal.riskReport.level]} risk`,
     body: signal.summary,
     data: {
       type: "signal",
@@ -34,8 +34,8 @@ function buildSignalNotification(signal: Signal) {
 }
 
 const LIMIT_REACHED_NOTIFICATION = {
-  title: "Limite raggiunto",
-  body: "Hai visto tutti i segnali FREE di oggi. Passa a Pro per segnali illimitati in tempo reale.",
+  title: "Daily limit reached",
+  body: "You've seen all of today's FREE signals. Go Pro for unlimited real-time signals.",
   data: {
     type: "limit-reached",
     route: "/plans",

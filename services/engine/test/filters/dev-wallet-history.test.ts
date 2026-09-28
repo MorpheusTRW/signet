@@ -9,7 +9,7 @@ describe("checkDevWalletHistory", () => {
     });
     const result = checkDevWalletHistory(event);
     expect(result.passed).toBe(true);
-    expect(result.reason).toBe("Dev pulito");
+    expect(result.reason).toBe("Clean dev");
   });
 
   it("flags a brand-new wallet with no history", () => {
@@ -27,7 +27,7 @@ describe("checkDevWalletHistory", () => {
     });
     const result = checkDevWalletHistory(event);
     expect(result.passed).toBe(false);
-    expect(result.reason).toBe("Dev con 6 rug precedenti");
+    expect(result.reason).toBe("Dev with 6 previous rugs");
     expect(result.riskPoints).toBe(50);
   });
 
@@ -38,7 +38,7 @@ describe("checkDevWalletHistory", () => {
     });
     const result = checkDevWalletHistory(event);
     expect(result.passed).toBe(false);
-    expect(result.reason).toBe("Dev seriale: almeno 26 lanci precedenti, 1 migrato");
+    expect(result.reason).toBe("Serial dev: at least 26 previous launches, 1 migrated");
     expect(result.riskPoints).toBe(50);
   });
 
@@ -57,7 +57,7 @@ describe("checkDevWalletHistory", () => {
     });
     const result = checkDevWalletHistory(event);
     expect(result.passed).toBe(false);
-    expect(result.reason).toContain("non verificato");
+    expect(result.reason).toContain("unverified");
     expect(result.riskPoints).toBe(5);
   });
 });

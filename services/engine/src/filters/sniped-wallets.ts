@@ -12,7 +12,7 @@ export function checkSnipedWallets(event: RawLaunchEvent): FilterCheck {
     return {
       id: "sniped-wallets",
       passed: false,
-      reason: "Snipe nei primi blocchi non verificati",
+      reason: "Early-block snipes unverified",
       riskPoints: 0,
     };
   }
@@ -21,7 +21,7 @@ export function checkSnipedWallets(event: RawLaunchEvent): FilterCheck {
     return {
       id: "sniped-wallets",
       passed: false,
-      reason: `Snipe di ${snipedWalletsCount} wallet nei primi blocchi`,
+      reason: `${snipedWalletsCount} ${snipedWalletsCount === 1 ? "wallet" : "wallets"} sniped in the first blocks`,
       riskPoints: 25,
     };
   }
@@ -30,7 +30,7 @@ export function checkSnipedWallets(event: RawLaunchEvent): FilterCheck {
     return {
       id: "sniped-wallets",
       passed: false,
-      reason: `Snipe di ${snipedWalletsCount} wallet nei primi blocchi`,
+      reason: `${snipedWalletsCount} ${snipedWalletsCount === 1 ? "wallet" : "wallets"} sniped in the first blocks`,
       riskPoints: 12,
     };
   }
@@ -40,8 +40,8 @@ export function checkSnipedWallets(event: RawLaunchEvent): FilterCheck {
     passed: true,
     reason:
       snipedWalletsCount > 0
-        ? `Snipe di ${snipedWalletsCount} wallet`
-        : "Nessuno snipe rilevato",
+        ? `${snipedWalletsCount} ${snipedWalletsCount === 1 ? "wallet" : "wallets"} sniped`
+        : "No snipes detected",
     riskPoints: 0,
   };
 }

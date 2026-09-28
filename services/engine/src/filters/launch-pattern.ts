@@ -18,11 +18,11 @@ export function checkAnomalousMigration(event: RawLaunchEvent): FilterCheck {
     return {
       id: "anomalous-migration",
       passed: false,
-      reason: `Migrazione anomala: ${event.initialLiquiditySol.toFixed(2)} SOL di liquidità (una normale ne ha ~85)`,
+      reason: `Abnormal migration: ${event.initialLiquiditySol.toFixed(2)} SOL liquidity (a normal one has ~85)`,
       riskPoints: 70,
     };
   }
-  return { id: "anomalous-migration", passed: true, reason: "Migrazione standard", riskPoints: 0 };
+  return { id: "anomalous-migration", passed: true, reason: "Standard migration", riskPoints: 0 };
 }
 
 export function checkMigrationSpeed(event: RawLaunchEvent): FilterCheck {
@@ -31,55 +31,55 @@ export function checkMigrationSpeed(event: RawLaunchEvent): FilterCheck {
     return {
       id: "migration-speed",
       passed: false,
-      reason: `Migrato ${minutes} min dopo il lancio: curva comprata subito da dev/bundle`,
+      reason: `Migrated ${minutes} min after launch: curve bought out by dev/bundle`,
       riskPoints: 70,
     };
   }
-  return { id: "migration-speed", passed: true, reason: "Tempo di migrazione normale", riskPoints: 0 };
+  return { id: "migration-speed", passed: true, reason: "Normal time to migration", riskPoints: 0 };
 }
 
 export function checkDevBuy(event: RawLaunchEvent): FilterCheck {
   const launch = event.launch;
-  if (!launch) return { id: "dev-buy", passed: true, reason: "Acquisto iniziale del dev non analizzato", riskPoints: 0 };
+  if (!launch) return { id: "dev-buy", passed: true, reason: "Dev initial buy not analyzed", riskPoints: 0 };
   const pct = launch.devBuyPct;
   // Chi compra nello stesso blocco della creazione agisce d'accordo col dev: dev + bundle
   // sono di fatto la stessa mano (es. un solo wallet "esterno" che prende il 60% al lancio).
   const insiders = Number((pct + launch.bundlePct).toFixed(2));
   if (pct >= 50) {
-    return { id: "dev-buy", passed: false, reason: `Il dev ha comprato il ${pct}% della supply al lancio`, riskPoints: 50 };
+    return { id: "dev-buy", passed: false, reason: `Dev bought ${pct}% of supply at launch`, riskPoints: 50 };
   }
   if (insiders >= 50) {
     return {
       id: "dev-buy",
       passed: false,
-      reason: `Dev e bundle hanno comprato il ${insiders}% della supply al lancio`,
+      reason: `Dev + bundle bought ${insiders}% of supply at launch`,
       riskPoints: 50,
     };
   }
   if (pct >= 20) {
-    return { id: "dev-buy", passed: false, reason: `Il dev ha comprato il ${pct}% della supply al lancio`, riskPoints: 15 };
+    return { id: "dev-buy", passed: false, reason: `Dev bought ${pct}% of supply at launch`, riskPoints: 15 };
   }
-  return { id: "dev-buy", passed: true, reason: "Acquisto iniziale del dev contenuto", riskPoints: 0 };
+  return { id: "dev-buy", passed: true, reason: "Dev initial buy is small", riskPoints: 0 };
 }
 
 /** Soglie allineate ai default di GMGN (bundler 10%): oltre il 30% è quasi certamente un lancio "preparato". */
 export function checkBundle(event: RawLaunchEvent): FilterCheck {
   const launch = event.launch;
-  if (!launch) return { id: "bundle", passed: true, reason: "Bundle non analizzato", riskPoints: 0 };
-  const linked = launch.linkedWallets >= 3 ? `, ${launch.linkedWallets} wallet collegati` : "";
-  const verb = launch.bundleWallets === 1 ? "ha" : "hanno";
-  const reason = `Bundle: ${launch.bundleWallets} wallet ${verb} comprato il ${launch.bundlePct}% nello stesso blocco del lancio${linked}`;
+  if (!launch) return { id: "bundle", passed: true, reason: "Bundle not analyzed", riskPoints: 0 };
+  const linked = launch.linkedWallets >= 3 ? `, ${launch.linkedWallets} linked wallets` : "";
+  const wallets = launch.bundleWallets === 1 ? "1 wallet" : `${launch.bundleWallets} wallets`;
+  const reason = `Bundle: ${wallets} bought ${launch.bundlePct}% in the launch block${linked}`;
   if (launch.bundlePct >= 30) return { id: "bundle", passed: false, reason, riskPoints: 30 };
   if (launch.bundlePct >= 10) return { id: "bundle", passed: false, reason, riskPoints: 15 };
   if (launch.linkedWallets >= 3) {
     return {
       id: "bundle",
       passed: false,
-      reason: `${launch.linkedWallets} acquirenti iniziali con fee pagate da altri wallet (stesso operatore)`,
+      reason: `${launch.linkedWallets} early buyers with fees paid by other wallets (same operator)`,
       riskPoints: 10,
     };
   }
-  return { id: "bundle", passed: true, reason: "Nessun bundle rilevante al lancio", riskPoints: 0 };
+  return { id: "bundle", passed: true, reason: "No significant bundle at launch", riskPoints: 0 };
 }
 
 /** Wallet dev "usa e getta": ricaricato poco prima del lancio. */
@@ -89,9 +89,9 @@ export function checkFreshDevWallet(event: RawLaunchEvent): FilterCheck {
     return {
       id: "fresh-dev-wallet",
       passed: false,
-      reason: `Wallet dev attivato ${Math.max(0, Math.round(minutes))} min prima del lancio (usa e getta)`,
+      reason: `Dev wallet activated ${Math.max(0, Math.round(minutes))} min before launch (burner)`,
       riskPoints: 15,
     };
   }
-  return { id: "fresh-dev-wallet", passed: true, reason: "Wallet dev non creato per il lancio", riskPoints: 0 };
+  return { id: "fresh-dev-wallet", passed: true, reason: "Dev wallet not created for this launch", riskPoints: 0 };
 }

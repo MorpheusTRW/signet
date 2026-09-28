@@ -8,7 +8,7 @@ describe("checkSnipedWallets", () => {
       makeRawLaunchEvent({ snipedWalletsCount: 0 }),
     );
     expect(result.passed).toBe(true);
-    expect(result.reason).toBe("Nessuno snipe rilevato");
+    expect(result.reason).toBe("No snipes detected");
   });
 
   it("reports a small number of snipers as passed but visible", () => {
@@ -16,7 +16,7 @@ describe("checkSnipedWallets", () => {
       makeRawLaunchEvent({ snipedWalletsCount: 3 }),
     );
     expect(result.passed).toBe(true);
-    expect(result.reason).toBe("Snipe di 3 wallet");
+    expect(result.reason).toBe("3 wallets sniped");
   });
 
   it("flags heavy sniping (obvious rug pattern)", () => {
