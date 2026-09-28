@@ -3,8 +3,13 @@ import type { RiskLevel } from "@seeker-signal/shared";
 import type { TrackRecordCategory } from "../track-record/generate-outcome.js";
 import type { DbClient } from "./client.js";
 
+export type TrackRecordSource = "synthetic" | "real";
+
 export interface TrackRecordEntry {
   id: string;
+  source: TrackRecordSource;
+  /** Prezzo alla migrazione (solo per source "real"). */
+  priceSolAtSignal: number | null;
   signalId: string;
   category: TrackRecordCategory;
   riskLevel: RiskLevel;
@@ -19,6 +24,8 @@ export interface TrackRecordEntry {
 
 interface TrackRecordRow {
   id: string;
+  source: TrackRecordSource;
+  price_sol_at_signal: number | null;
   signal_id: string;
   category: TrackRecordCategory;
   risk_level: RiskLevel;
@@ -34,6 +41,8 @@ interface TrackRecordRow {
 function rowToEntry(row: TrackRecordRow): TrackRecordEntry {
   return {
     id: row.id,
+    source: row.source,
+    priceSolAtSignal: row.price_sol_at_signal,
     signalId: row.signal_id,
     category: row.category,
     riskLevel: row.risk_level,
@@ -55,12 +64,16 @@ export class TrackRecordsRepo {
     category: TrackRecordCategory;
     riskLevel: RiskLevel;
     createdAt: Date;
+    source?: TrackRecordSource;
+    priceSolAtSignal?: number | null;
   }): TrackRecordEntry {
     const dueAt1h = new Date(params.createdAt.getTime() + 3_600_000);
     const dueAt24h = new Date(params.createdAt.getTime() + 24 * 3_600_000);
 
     const entry: TrackRecordEntry = {
       id: randomUUID(),
+      source: params.source ?? "synthetic",
+      priceSolAtSignal: params.priceSolAtSignal ?? null,
       signalId: params.signalId,
       category: params.category,
       riskLevel: params.riskLevel,
@@ -76,10 +89,10 @@ export class TrackRecordsRepo {
     this.db
       .prepare(
         `INSERT INTO track_records (
-          id, signal_id, category, risk_level, created_at, due_at_1h, due_at_24h,
+          id, source, price_sol_at_signal, signal_id, category, risk_level, created_at, due_at_1h, due_at_24h,
           price_change_1h_pct, price_change_24h_pct, settled_1h, settled_24h
         ) VALUES (
-          @id, @signalId, @category, @riskLevel, @createdAt, @dueAt1h, @dueAt24h,
+          @id, @source, @priceSolAtSignal, @signalId, @category, @riskLevel, @createdAt, @dueAt1h, @dueAt24h,
           @priceChange1hPct, @priceChange24hPct, 0, 0
         )`,
       )
@@ -89,18 +102,19 @@ export class TrackRecordsRepo {
   }
 
   /** Righe con marcatura +1h o +24h scaduta e non ancora realizzata. */
-  listDueForSettlement(now: Date = new Date()): TrackRecordEntry[] {
+  listDueForSettlement(now: Date = new Date(), source: TrackRecordSource = "synthetic"): TrackRecordEntry[] {
     const rows = this.db
       .prepare(
         `SELECT * FROM track_records
-         WHERE (settled_1h = 0 AND due_at_1h <= ?)
-            OR (settled_24h = 0 AND due_at_24h <= ?)`,
+         WHERE source = ? AND ((settled_1h = 0 AND due_at_1h <= ?)
+            OR (settled_24h = 0 AND due_at_24h <= ?))`,
       )
-      .all(now.toISOString(), now.toISOString()) as TrackRecordRow[];
+      .all(source, now.toISOString(), now.toISOString()) as TrackRecordRow[];
     return rows.map(rowToEntry);
   }
 
-  settle1h(id: string, priceChangePct: number): void {
+  /** `null` = marcatura mancata (letta troppo tardi o non leggibile): esclusa dalle statistiche. */
+  settle1h(id: string, priceChangePct: number | null): void {
     this.db
       .prepare(
         `UPDATE track_records SET price_change_1h_pct = ?, settled_1h = 1 WHERE id = ?`,
@@ -108,7 +122,7 @@ export class TrackRecordsRepo {
       .run(priceChangePct, id);
   }
 
-  settle24h(id: string, priceChangePct: number): void {
+  settle24h(id: string, priceChangePct: number | null): void {
     this.db
       .prepare(
         `UPDATE track_records SET price_change_24h_pct = ?, settled_24h = 1 WHERE id = ?`,
@@ -116,10 +130,10 @@ export class TrackRecordsRepo {
       .run(priceChangePct, id);
   }
 
-  list(limit = 10_000): TrackRecordEntry[] {
+  list(source: TrackRecordSource = "synthetic", limit = 10_000): TrackRecordEntry[] {
     const rows = this.db
-      .prepare(`SELECT * FROM track_records ORDER BY created_at DESC LIMIT ?`)
-      .all(limit) as TrackRecordRow[];
+      .prepare(`SELECT * FROM track_records WHERE source = ? ORDER BY created_at DESC LIMIT ?`)
+      .all(source, limit) as TrackRecordRow[];
     return rows.map(rowToEntry);
   }
 }

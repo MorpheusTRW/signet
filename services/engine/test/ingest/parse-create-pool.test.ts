@@ -18,6 +18,8 @@ describe("parseCreatePool", () => {
     expect(parsed!.pool).toBe("DQcEekyuLxWCVUTmgpZQpyuJduFvi9K7sJWCcjobU7fx");
     expect(parsed!.tokenMint).toBe("65gyEJ4kWQm2HHHFkqKuX2d5D3eL7gEMku7vv7eYpump");
     expect(parsed!.poolBaseVault.startsWith("3ryWxbRnMC")).toBe(true);
+    // Vault wSOL: nei saldi post-tx detiene esattamente la liquidità iniziale (0.637116159 SOL).
+    expect(parsed!.poolQuoteVault.startsWith("626NFrT2hF")).toBe(true);
     expect(parsed!.initialLiquiditySol).toBeCloseTo(0.637116159, 9);
     // Saldo post-tx del vault token della pool: 206.900.000 token (6 decimali).
     expect(parsed!.initialTokenAmountRaw).toBe(206_900_000_000_000n);

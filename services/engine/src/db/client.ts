@@ -97,6 +97,29 @@ CREATE TABLE IF NOT EXISTS push_notifications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_push_notifications_due ON push_notifications(status, scheduled_at);
+CREATE TABLE IF NOT EXISTS markets (
+  signal_id TEXT PRIMARY KEY REFERENCES signals(id),
+  base_vault TEXT NOT NULL,
+  quote_vault TEXT NOT NULL,
+  price_sol_at_signal REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_positions (
+  id TEXT PRIMARY KEY,
+  wallet_pubkey TEXT NOT NULL,
+  signal_id TEXT NOT NULL REFERENCES signals(id),
+  mode TEXT NOT NULL,
+  size_sol REAL NOT NULL,
+  token_amount REAL NOT NULL,
+  entry_price_sol REAL NOT NULL,
+  status TEXT NOT NULL,
+  opened_at TEXT NOT NULL,
+  closed_at TEXT,
+  exit_value_sol REAL
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_positions_wallet ON user_positions(wallet_pubkey, status);
+
 CREATE INDEX IF NOT EXISTS idx_push_notifications_device_type_day ON push_notifications(device_id, type, scheduled_at);
 
 CREATE TABLE IF NOT EXISTS settings (
@@ -124,5 +147,8 @@ export function createDb(path: string): DbClient {
   db.pragma("journal_mode = WAL");
   db.exec(MIGRATIONS);
   addColumnIfMissing(db, "signals", "image_url", "TEXT");
+  // "synthetic" = esiti simulati (solo EVENT_SOURCE=synthetic); "real" = prezzi letti dalla pool.
+  addColumnIfMissing(db, "track_records", "source", "TEXT NOT NULL DEFAULT 'synthetic'");
+  addColumnIfMissing(db, "track_records", "price_sol_at_signal", "REAL");
   return db;
 }

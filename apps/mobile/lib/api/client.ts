@@ -47,8 +47,29 @@ export function getStatus(): Promise<EngineStatus> {
   return request<EngineStatus>('/status')
 }
 
-export function getPositions(): Promise<PositionsResponse> {
-  return request<PositionsResponse>('/positions')
+export function getPositions(pubkey: string): Promise<PositionsResponse> {
+  return request<PositionsResponse>(`/positions?pubkey=${encodeURIComponent(pubkey)}`)
+}
+
+/** Errore dell'engine col messaggio leggibile restituito dal server. */
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${AppConfig.engineApiUrl}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const json = (await response.json()) as T & { message?: string; error?: string }
+  if (!response.ok) throw new Error(json.message ?? json.error ?? `Engine API ${path} -> ${response.status}`)
+  return json
+}
+
+/** Apre una posizione paper al prezzo reale della pool (solo in paper mode). */
+export function openPaperPosition(params: { signalId: string; pubkey: string; amountSol: number }) {
+  return postJson<{ id: string; tokenAmount: number; entryPriceSol: number }>('/positions/paper', params)
+}
+
+export function closePosition(id: string, pubkey: string) {
+  return postJson<{ id: string; pnlSol: number }>(`/positions/${encodeURIComponent(id)}/close`, { pubkey })
 }
 
 export function getTrackRecord(): Promise<TrackRecordStats> {

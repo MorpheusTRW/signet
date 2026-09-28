@@ -21,9 +21,10 @@ const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   DATABASE_PATH: z.string().default("./data/seeker-signal.db"),
   MAX_PORTFOLIO_EXPOSURE: z.coerce.number().min(0).max(1).default(0.2),
-  // Paper trading (F1): portafoglio simulato, nessun fondo reale coinvolto.
-  PAPER_PORTFOLIO_SOL: z.coerce.number().positive().default(100),
-  PAPER_DEFAULT_POSITION_SOL: z.coerce.number().positive().default(2),
+  // Paper mode: saldo virtuale di partenza di ogni wallet (le posizioni le apre solo l'utente).
+  PAPER_BALANCE_SOL: z.coerce.number().positive().default(10),
+  // Intervallo (ms) del settlement delle marcature di track record reali (prezzo dalla pool).
+  TRACK_RECORD_SETTLE_INTERVAL_MS: z.coerce.number().int().positive().default(60_000),
   SYNTHETIC_INTERVAL_MS: z.coerce.number().int().positive().default(8000),
 
   // RPC per letture on-chain reali (saldo/stake SKR per il tier HOLDER).

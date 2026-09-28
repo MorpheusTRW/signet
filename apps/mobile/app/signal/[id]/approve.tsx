@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from 'expo-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { VersionedTransaction } from '@solana/web3.js'
+import { LAMPORTS_PER_SOL, VersionedTransaction } from '@solana/web3.js'
 import { JUPITER_SWAP_ALLOWED_PROGRAMS, validateSwapTx } from '@seeker-signal/shared'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { AppActionButton } from '@/components/app-action-button'
@@ -12,7 +12,7 @@ import { Glass } from '@/components/ui/glass'
 import { Screen } from '@/components/ui/screen'
 import { Text } from '@/components/ui/text'
 import { palette } from '@/constants/theme'
-import { buildSwap, BuildSwapError, getPositions, getStatus } from '@/lib/api/client'
+import { buildSwap, BuildSwapError, getPositions, getStatus, openPaperPosition } from '@/lib/api/client'
 import { useSettings } from '@/lib/settings/settings'
 
 const VALIDATION_REASON_LABELS: Record<string, string> = {
@@ -59,6 +59,7 @@ export default function ApproveEntryScreen() {
   const { account, connection, signAndSendTransactions } = useMobileWallet()
   const pubkey = account?.address.toBase58()
   const { settings } = useSettings()
+  const queryClient = useQueryClient()
 
   const buildQuery = useQuery({
     queryKey: ['build-swap', id, pubkey, amountSol, slippageBps],
@@ -67,10 +68,15 @@ export default function ApproveEntryScreen() {
       // stessi limiti, ma l'app non si fida ciecamente e blocca prima di costruire.
       const status = await getStatus()
       if (status.killSwitch) throw new Error('Trading paused by the service (kill switch on).')
-      const { portfolio } = await getPositions()
-      if (amountSol > portfolio.remainingSol) {
+      const { portfolio } = await getPositions(pubkey!)
+      // Paper: portafoglio virtuale del wallet. Live: 20% del saldo SOL reale, letto qui dalla chain.
+      const remaining =
+        status.tradingMode === 'paper'
+          ? portfolio.remainingSol
+          : ((await connection.getBalance(account!.address)) / LAMPORTS_PER_SOL) * portfolio.maxExposureFraction
+      if (amountSol > remaining) {
         throw new Error(
-          `This would exceed the ${portfolio.maxExposureFraction * 100}% exposure limit: ${portfolio.remainingSol.toFixed(4)} SOL available.`,
+          `This would exceed the ${portfolio.maxExposureFraction * 100}% exposure limit: ${remaining.toFixed(4)} SOL available.`,
         )
       }
       return buildSwap({ signalId: id, pubkey: pubkey!, amountSol, slippageBps })
@@ -159,7 +165,8 @@ export default function ApproveEntryScreen() {
               Paper mode
             </Text>
             <Text variant="secondary">
-              The transaction is built and verified but never signed or sent: no real funds move.
+              The transaction is built and verified but never signed or sent: no real funds move. A simulated position
+              is opened at the real pool price so you can follow it in Positions.
             </Text>
           </Glass>
         </Animated.View>
@@ -191,10 +198,14 @@ export default function ApproveEntryScreen() {
             }
 
             if (build.tradingMode === 'paper') {
+              // Posizione paper al prezzo reale della pool in questo istante (nessun fondo si muove).
+              await openPaperPosition({ signalId: id, pubkey, amountSol })
+              void queryClient.invalidateQueries({ queryKey: ['positions'] })
               return {
                 status: 'success',
-                title: 'Transaction verified',
-                description: 'All checks passed. No real transaction sent (paper mode).',
+                title: 'Paper position opened',
+                description:
+                  'All checks passed. Tracked at the real pool price in Positions — no real transaction sent.',
               } as const
             }
 

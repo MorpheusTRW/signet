@@ -77,7 +77,7 @@ describe("kill switch, cap e rate limit", () => {
   });
 
   it("rifiuta importi sopra MAX_SWAP_SOL", async () => {
-    ctx = createTestApp({ env: { MAX_SWAP_SOL: "1" }, buildSwap: deps(), paperTradingConfig: { portfolioValueSol: 1000 } });
+    ctx = createTestApp({ env: { MAX_SWAP_SOL: "1" }, buildSwap: deps(), paperTradingConfig: { balanceSol: 1000 } });
     const signal = buildSignal(makeRawLaunchEvent({ program: "pumpswap" }));
     ctx.signalsRepo.insert(signal);
     const res = await ctx.app.inject({ method: "POST", url: "/build-swap", payload: swapPayload(signal.id, 2) });

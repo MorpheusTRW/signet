@@ -242,6 +242,13 @@ export class HeliusEventSource implements EventSource {
       unverified,
       pumpMigration: true,
       ...(launch && { launch }),
+      ...(pool.initialTokenAmountRaw > 0n && {
+        market: {
+          baseVault: pool.poolBaseVault,
+          quoteVault: pool.poolQuoteVault,
+          priceSol: pool.initialLiquiditySol / (Number(pool.initialTokenAmountRaw) / 10 ** mint.decimals),
+        },
+      }),
     };
   }
 }

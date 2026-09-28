@@ -3,8 +3,9 @@ import type { FastifyInstance } from "fastify";
 import { createDb, type DbClient } from "../../src/db/client.js";
 import { buildTierConfig } from "../../src/config/monetization.js";
 import { DevicesRepo } from "../../src/db/devices-repo.js";
-import { PaperTradesRepo } from "../../src/db/paper-trades-repo.js";
+import { MarketsRepo } from "../../src/db/markets-repo.js";
 import { SettingsRepo } from "../../src/db/settings-repo.js";
+import { UserPositionsRepo } from "../../src/db/user-positions-repo.js";
 import { KillSwitch } from "../../src/safety/kill-switch.js";
 import { RateLimiter } from "../../src/safety/rate-limiter.js";
 import { SignalDeliveriesRepo } from "../../src/db/signal-deliveries-repo.js";
@@ -14,6 +15,7 @@ import { TrackRecordsRepo } from "../../src/db/track-records-repo.js";
 import type { HolderChecker } from "../../src/entitlements/holder-check.js";
 import type { ResolveTierDeps } from "../../src/entitlements/resolve-tier.js";
 import { loadEnv } from "../../src/env.js";
+import type { RpcCall } from "../../src/ingest/helius/rpc.js";
 import type { PaperTradingConfig } from "../../src/paper-trading/types.js";
 import { buildServer } from "../../src/server.js";
 
@@ -30,6 +32,8 @@ export function createTestApp(
     paperTradingConfig?: Partial<PaperTradingConfig>;
     env?: NodeJS.ProcessEnv;
     rateLimit?: number;
+    priceRpc?: RpcCall;
+    trackRecordSource?: "real" | "synthetic";
     buildSwap?: {
       connection?: Connection;
       treasuryWalletPubkey?: string;
@@ -45,7 +49,8 @@ export function createTestApp(
   signalDeliveriesRepo: SignalDeliveriesRepo;
   subscriptionsRepo: SubscriptionsRepo;
   trackRecordsRepo: TrackRecordsRepo;
-  paperTradesRepo: PaperTradesRepo;
+  userPositionsRepo: UserPositionsRepo;
+  marketsRepo: MarketsRepo;
   resolveTierDeps: ResolveTierDeps;
   killSwitch: KillSwitch;
 } {
@@ -57,7 +62,8 @@ export function createTestApp(
   const signalDeliveriesRepo = new SignalDeliveriesRepo(db);
   const subscriptionsRepo = new SubscriptionsRepo(db);
   const trackRecordsRepo = new TrackRecordsRepo(db);
-  const paperTradesRepo = new PaperTradesRepo(db);
+  const userPositionsRepo = new UserPositionsRepo(db);
+  const marketsRepo = new MarketsRepo(db);
 
   const resolveTierDeps: ResolveTierDeps = {
     subscriptionsRepo,
@@ -66,9 +72,8 @@ export function createTestApp(
   };
 
   const paperTradingConfig: PaperTradingConfig = {
-    portfolioValueSol: env.PAPER_PORTFOLIO_SOL,
+    balanceSol: env.PAPER_BALANCE_SOL,
     maxExposureFraction: env.MAX_PORTFOLIO_EXPOSURE,
-    defaultPositionSizeSol: env.PAPER_DEFAULT_POSITION_SOL,
     ...overrides.paperTradingConfig,
   };
 
@@ -82,8 +87,11 @@ export function createTestApp(
     signalDeliveriesRepo,
     trackRecordsRepo,
     resolveTierDeps,
-    paperTradesRepo,
+    userPositionsRepo,
+    marketsRepo,
     paperTradingConfig,
+    priceRpc: overrides.priceRpc,
+    trackRecordSource: overrides.trackRecordSource ?? "synthetic",
     buildSwap: {
       connection: overrides.buildSwap?.connection,
       treasuryWalletPubkey: overrides.buildSwap?.treasuryWalletPubkey,
@@ -100,7 +108,8 @@ export function createTestApp(
     signalDeliveriesRepo,
     subscriptionsRepo,
     trackRecordsRepo,
-    paperTradesRepo,
+    userPositionsRepo,
+    marketsRepo,
     resolveTierDeps,
     killSwitch,
   };

@@ -2,7 +2,8 @@ import { Connection } from "@solana/web3.js";
 import { createDb } from "./db/client.js";
 import { DevicesRepo } from "./db/devices-repo.js";
 import { SettingsRepo } from "./db/settings-repo.js";
-import { PaperTradesRepo } from "./db/paper-trades-repo.js";
+import { MarketsRepo } from "./db/markets-repo.js";
+import { UserPositionsRepo } from "./db/user-positions-repo.js";
 import { PushNotificationsRepo } from "./db/push-notifications-repo.js";
 import { SignalDeliveriesRepo } from "./db/signal-deliveries-repo.js";
 import { SignalsRepo } from "./db/signals-repo.js";
@@ -25,6 +26,7 @@ import { createPushSender } from "./push/sender.js";
 import { buildServer } from "./server.js";
 import { KillSwitch } from "./safety/kill-switch.js";
 import { RateLimiter } from "./safety/rate-limiter.js";
+import { startRealTrackRecordSettler } from "./track-record/settle-real.js";
 import { processLaunchEvent } from "./signals/pipeline.js";
 
 const env = loadEnv();
@@ -32,7 +34,8 @@ const env = loadEnv();
 const db = createDb(env.DATABASE_PATH);
 const signalsRepo = new SignalsRepo(db);
 const devicesRepo = new DevicesRepo(db);
-const paperTradesRepo = new PaperTradesRepo(db);
+const userPositionsRepo = new UserPositionsRepo(db);
+const marketsRepo = new MarketsRepo(db);
 const subscriptionsRepo = new SubscriptionsRepo(db);
 const signalDeliveriesRepo = new SignalDeliveriesRepo(db);
 const trackRecordsRepo = new TrackRecordsRepo(db);
@@ -42,9 +45,8 @@ const killSwitch = new KillSwitch(new SettingsRepo(db), env.KILL_SWITCH);
 const buildSwapRateLimiter = new RateLimiter(env.BUILD_SWAP_RATE_LIMIT_PER_MIN, 60_000);
 
 const paperTradingConfig: PaperTradingConfig = {
-  portfolioValueSol: env.PAPER_PORTFOLIO_SOL,
+  balanceSol: env.PAPER_BALANCE_SOL,
   maxExposureFraction: env.MAX_PORTFOLIO_EXPOSURE,
-  defaultPositionSizeSol: env.PAPER_DEFAULT_POSITION_SOL,
 };
 
 const tierConfig = buildTierConfig(env);
@@ -55,6 +57,10 @@ const tierConfig = buildTierConfig(env);
 const connection = env.SOLANA_RPC_URL
   ? new Connection(env.SOLANA_RPC_URL, "confirmed")
   : undefined;
+
+// Prezzi reali dalle pool (track record e posizioni): stesso RPC del resto dell'engine.
+const priceRpc = env.SOLANA_RPC_URL ? createRpcCall(env.SOLANA_RPC_URL) : undefined;
+const trackRecordSource = env.EVENT_SOURCE === "synthetic" ? "synthetic" : "real";
 
 const skrHolderReader = connection ? createSkrHolderReader(connection) : NULL_SKR_HOLDER_READER;
 
@@ -76,8 +82,11 @@ const app = buildServer(env, {
   signalDeliveriesRepo,
   trackRecordsRepo,
   resolveTierDeps,
-  paperTradesRepo,
+  userPositionsRepo,
+  marketsRepo,
   paperTradingConfig,
+  priceRpc,
+  trackRecordSource,
   killSwitch,
   buildSwapRateLimiter,
   buildSwap: {
@@ -130,9 +139,8 @@ const eventSource = createEventSource();
 eventSource.start((event) => {
   const signal = processLaunchEvent(event, {
     signalsRepo,
-    paperTradesRepo,
     trackRecordsRepo,
-    paperTradingConfig,
+    marketsRepo,
   });
 
   scheduleSignalPush(signal, {
@@ -146,8 +154,17 @@ eventSource.start((event) => {
   });
 });
 
+const stopTrackRecordSettler = priceRpc
+  ? startRealTrackRecordSettler(
+      { trackRecordsRepo, marketsRepo, rpc: priceRpc },
+      env.TRACK_RECORD_SETTLE_INTERVAL_MS,
+      app.log,
+    )
+  : () => {};
+
 app.addHook("onClose", async () => {
   stopPushDispatcher();
+  stopTrackRecordSettler();
   await eventSource.stop();
   db.close();
 });

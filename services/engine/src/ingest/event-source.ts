@@ -62,6 +62,8 @@ export interface RawLaunchEvent {
   /** true se l'evento è una migrazione pump.fun → PumpSwap reale (liquidità attesa ~85 SOL). */
   pumpMigration?: boolean;
   launch?: LaunchPattern;
+  /** Vault della pool e prezzo alla migrazione: permettono di seguire il prezzo reale nel tempo. */
+  market?: { baseVault: string; quoteVault: string; priceSol: number };
 }
 
 /** Interfaccia comune per gli adapter di ingest (synthetic, helius-ws, yellowstone-grpc). */

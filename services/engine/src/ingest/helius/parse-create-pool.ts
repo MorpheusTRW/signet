@@ -13,6 +13,7 @@ const ACC_POOL = 0;
 const ACC_BASE_MINT = 3;
 const ACC_QUOTE_MINT = 4;
 const ACC_POOL_BASE_TOKEN_ACCOUNT = 9;
+const ACC_POOL_QUOTE_TOKEN_ACCOUNT = 10;
 
 /** Subset di `getTransaction` (encoding "json") che serve al parsing. */
 export interface RawTransaction {
@@ -41,6 +42,8 @@ export interface ParsedCreatePool {
   tokenMint: string;
   /** Token account (vault) della pool che detiene il token base: da escludere dai top holder. */
   poolBaseVault: string;
+  /** Vault wSOL della pool. */
+  poolQuoteVault: string;
   coinCreator: string;
   initialLiquiditySol: number;
   /** Token (unità raw) versati nella pool: con la liquidità SOL dà il prezzo alla migrazione. */
@@ -85,7 +88,8 @@ export function parseCreatePool(tx: RawTransaction): ParsedCreatePool | null {
     const baseMint = account(ACC_BASE_MINT);
     const quoteMint = account(ACC_QUOTE_MINT);
     const poolBaseVault = account(ACC_POOL_BASE_TOKEN_ACCOUNT);
-    if (!pool || !baseMint || !quoteMint || !poolBaseVault) continue;
+    const poolQuoteVault = account(ACC_POOL_QUOTE_TOKEN_ACCOUNT);
+    if (!pool || !baseMint || !quoteMint || !poolBaseVault || !poolQuoteVault) continue;
 
     // Solo pool con quote wSOL: la liquidità è espressa in SOL e Jupiter/`/build-swap` partono da SOL.
     if (quoteMint !== NATIVE_MINT.toBase58()) continue;
@@ -98,6 +102,7 @@ export function parseCreatePool(tx: RawTransaction): ParsedCreatePool | null {
       pool,
       tokenMint: baseMint,
       poolBaseVault,
+      poolQuoteVault,
       coinCreator,
       initialLiquiditySol: Number(quoteAmountIn) / 1_000_000_000,
       initialTokenAmountRaw: baseAmountIn,

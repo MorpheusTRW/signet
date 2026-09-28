@@ -1,6 +1,8 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import type { DevicesRepo } from "./db/devices-repo.js";
-import type { PaperTradesRepo } from "./db/paper-trades-repo.js";
+import type { MarketsRepo } from "./db/markets-repo.js";
+import type { UserPositionsRepo } from "./db/user-positions-repo.js";
+import type { RpcCall } from "./ingest/helius/rpc.js";
 import type { SignalDeliveriesRepo } from "./db/signal-deliveries-repo.js";
 import type { SignalsRepo } from "./db/signals-repo.js";
 import type { TrackRecordsRepo } from "./db/track-records-repo.js";
@@ -24,8 +26,13 @@ export interface ServerDeps {
   signalDeliveriesRepo: SignalDeliveriesRepo;
   trackRecordsRepo: TrackRecordsRepo;
   resolveTierDeps: ResolveTierDeps;
-  paperTradesRepo: PaperTradesRepo;
+  userPositionsRepo: UserPositionsRepo;
+  marketsRepo: MarketsRepo;
   paperTradingConfig: PaperTradingConfig;
+  /** RPC per i prezzi reali delle pool (undefined = non configurato). */
+  priceRpc: RpcCall | undefined;
+  /** Quali marcature mostra /track-record: reali (adapter on-chain) o simulate (synthetic). */
+  trackRecordSource: "real" | "synthetic";
   killSwitch: KillSwitch;
   buildSwapRateLimiter: RateLimiter;
   buildSwap: Pick<
@@ -59,16 +66,22 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     resolveTierDeps: deps.resolveTierDeps,
   });
   registerPositionsRoutes(app, {
-    paperTradesRepo: deps.paperTradesRepo,
+    userPositionsRepo: deps.userPositionsRepo,
     signalsRepo: deps.signalsRepo,
+    marketsRepo: deps.marketsRepo,
     paperTradingConfig: deps.paperTradingConfig,
+    resolveTierDeps: deps.resolveTierDeps,
+    killSwitch: deps.killSwitch,
+    tradingMode: deps.buildSwap.tradingMode,
+    maxSwapSol: env.MAX_SWAP_SOL,
+    rpc: deps.priceRpc,
   });
   registerDevicesRoutes(app, deps.devicesRepo);
   registerMeRoutes(app, deps.resolveTierDeps);
-  registerTrackRecordRoutes(app, deps.trackRecordsRepo);
+  registerTrackRecordRoutes(app, deps.trackRecordsRepo, deps.trackRecordSource);
   registerBuildSwapRoute(app, {
     signalsRepo: deps.signalsRepo,
-    paperTradesRepo: deps.paperTradesRepo,
+    userPositionsRepo: deps.userPositionsRepo,
     paperTradingConfig: deps.paperTradingConfig,
     resolveTierDeps: deps.resolveTierDeps,
     killSwitch: deps.killSwitch,

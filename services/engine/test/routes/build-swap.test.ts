@@ -137,7 +137,7 @@ describe("POST /build-swap", () => {
   it("rejects an amount that would exceed the 20% exposure limit", async () => {
     ctx = createTestApp({
       buildSwap: buildSwapDeps(),
-      paperTradingConfig: { portfolioValueSol: 10, maxExposureFraction: 0.2 }, // max 2 SOL
+      paperTradingConfig: { balanceSol: 10, maxExposureFraction: 0.2 }, // max 2 SOL
     });
     const signal = buildSignal(makeRawLaunchEvent({ program: "pumpswap" }));
     ctx.signalsRepo.insert(signal);

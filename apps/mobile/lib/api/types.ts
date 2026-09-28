@@ -35,6 +35,8 @@ export interface CategoryStats {
 }
 
 export interface TrackRecordStats {
+  /** "real" = prezzi letti dalle pool on-chain; "synthetic" = solo in sviluppo. */
+  source: 'real' | 'synthetic'
   discarded: CategoryStats
   signaled: CategoryStats
 }
@@ -77,29 +79,39 @@ export interface EngineStatus {
   tradingMode: 'paper' | 'live'
 }
 
+// In sync con services/engine/src/routes/positions.ts.
 export interface PortfolioSummary {
-  valueSol: number
+  /** Saldo virtuale iniziale + PnL realizzato (paper). */
+  balanceSol: number
+  startingBalanceSol: number
   maxExposureFraction: number
   openExposureSol: number
   remainingSol: number
   realizedPnlSol: number
+  /** null se i prezzi delle pool non sono leggibili in questo momento. */
+  unrealizedPnlSol: number | null
 }
 
 export interface PositionItem {
   id: string
   signalId: string
-  sizeSol: number
-  outcomeMultiplier: number
-  pnlSol: number
-  status: 'open' | 'closed'
-  openedAt: string
-  closesAt: string
-  closedAt: string | null
   tokenSymbol: string | null
   tokenName: string | null
+  imageUrl: string | null
+  status: 'open' | 'closed'
+  sizeSol: number
+  tokenAmount: number
+  entryPriceSol: number
+  openedAt: string
+  closedAt: string | null
+  /** Valore attuale (aperta) o incassato (chiusa); null se il prezzo non è leggibile. */
+  valueSol: number | null
+  pnlSol: number | null
+  pnlPct: number | null
 }
 
 export interface PositionsResponse {
+  mode: 'paper' | 'live'
   portfolio: PortfolioSummary
   positions: PositionItem[]
 }

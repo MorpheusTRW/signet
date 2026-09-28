@@ -155,6 +155,12 @@
 
 - **App e testi del server in inglese** (pubblico target su X): tutte le schermate, motivi di rischio, sintesi ("New PumpSwap pool. Clean dev. 3 wallets sniped. Risk: Low."), notifiche push, messaggi di errore di `/build-swap` e pagina `/privacy`. Solo inglese, niente i18n (scelta voluta); commenti del codice restano in italiano. I segnali già salvati nel DB restano con testi in italiano.
 
+- **Via i dati simulati da Posizioni e Track record** (segnalato dall'utente: "+16 SOL di PnL senza aver aperto nulla"). Erano residui di F1: il server apriva da solo posizioni in un portafoglio finto da 100 SOL con esiti casuali, e il track record usava esiti generati (`generate-outcome.ts`) anche coi segnali reali. Ora:
+  - **Prezzo reale** (`src/market/pool.ts`): rapporto fra i saldi dei due vault della pool PumpSwap (base e wSOL, indici 9/10 di `create_pool`, verificati sulla tx reale), letti con `getMultipleAccounts`; nessun servizio terzo. Pool chiusa/vuota = valore zero.
+  - **Track record reale**: alla migrazione si salvano vault e prezzo (tabella `markets`); `settle-real.ts` (ogni 60 s) realizza +1h/+24h col prezzo reale. Letture oltre 15 min (1h) o 2 h (24h) dalla scadenza — es. server spento — vengono **scartate**, non falsate. Le marcature simulate restano solo per EVENT_SOURCE=synthetic (colonna `source`) e non sono mai mostrate in produzione. L'app mostra le statistiche solo con ≥10 esiti e usa la **mediana** (una memecoin da 100x falserebbe la media).
+  - **Posizioni dell'utente** (`user_positions`): nessuna apertura automatica. In paper mode "Verify (paper)" apre una posizione con fill simulato a prodotto costante sulle riserve reali della pool (fee di piattaforma del tier inclusa, fee della pool no: stima leggermente ottimistica); valore/PnL seguono il prezzo reale; chiusura manuale. Saldo virtuale per wallet `PAPER_BALANCE_SOL` (default 10). Limite del 20% ora **per wallet** (paper: saldo virtuale + PnL realizzato; live: 20% del saldo SOL reale letto dalla chain), anche in `/build-swap` e ricontrollato nell'app.
+  - Limite noto: gli endpoint delle posizioni paper non verificano che chi chiama possieda il wallet (nessun fondo reale coinvolto); da legare all'API key del device prima del live.
+
 ### Da fare
 - % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 

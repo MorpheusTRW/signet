@@ -9,21 +9,17 @@ import { type Connection, PublicKey } from "@solana/web3.js";
 import { swapRequestSchema } from "@seeker-signal/shared";
 import type { FastifyInstance } from "fastify";
 import { isJupiterRoutable } from "../config/jupiter.js";
-import type { PaperTradesRepo } from "../db/paper-trades-repo.js";
 import type { SignalsRepo } from "../db/signals-repo.js";
 import type { ResolveTierDeps } from "../entitlements/resolve-tier.js";
 import { resolveTier } from "../entitlements/resolve-tier.js";
-import { remainingExposureSol } from "../paper-trading/engine.js";
-import type { PaperTradingConfig } from "../paper-trading/types.js";
+import { type ExposureDeps, remainingForWallet } from "../positions/exposure.js";
 import { buildVersionedTransaction } from "../swap/build-transaction.js";
 import type { KillSwitch } from "../safety/kill-switch.js";
 import type { RateLimiter } from "../safety/rate-limiter.js";
 import { buildJupiterSwap } from "../swap/jupiter-client.js";
 
-export interface BuildSwapRouteDeps {
+export interface BuildSwapRouteDeps extends Omit<ExposureDeps, "connection"> {
   signalsRepo: SignalsRepo;
-  paperTradesRepo: PaperTradesRepo;
-  paperTradingConfig: PaperTradingConfig;
   resolveTierDeps: ResolveTierDeps;
   /** undefined se SOLANA_RPC_URL non è configurato. */
   connection: Connection | undefined;
@@ -96,13 +92,13 @@ export function registerBuildSwapRoute(app: FastifyInstance, deps: BuildSwapRout
       });
     }
 
-    // Controllo del limite del 20% PRIMA di costruire la transazione (CLAUDE.md, principio 3).
-    const openExposureSol = deps.paperTradesRepo.sumOpenExposureSol();
-    const remaining = remainingExposureSol(openExposureSol, deps.paperTradingConfig);
+    // Controllo del limite del 20% PRIMA di costruire (CLAUDE.md, principio 3), sul
+    // portafoglio di QUESTO wallet (paper: saldo virtuale; live: saldo reale).
+    const remaining = await remainingForWallet(pubkey, { ...deps, connection });
     if (amountSol > remaining) {
       return reply.status(409).send({
         error: "exposure_limit_exceeded",
-        message: `Portfolio exposure limit (20%) exceeded: ${remaining.toFixed(4)} SOL remaining`,
+        message: `Portfolio exposure limit (${deps.paperTradingConfig.maxExposureFraction * 100}%) exceeded: ${remaining.toFixed(4)} SOL remaining`,
         remainingSol: remaining,
       });
     }
