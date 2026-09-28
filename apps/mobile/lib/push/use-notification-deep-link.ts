@@ -40,7 +40,7 @@ export function useNotificationDeepLink(): void {
 
     const unsubscribeForeground = onMessage(messaging, async (message) => {
       if (message.notification) {
-        Alert.alert(message.notification.title ?? 'Seeker Signal', message.notification.body ?? '')
+        Alert.alert(message.notification.title ?? 'Signet', message.notification.body ?? '')
       }
     })
 

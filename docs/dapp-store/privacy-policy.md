@@ -1,4 +1,4 @@
-# Privacy Policy — Seeker Signal (BOZZA da far rivedere e pubblicare a un URL)
+# Privacy Policy — Signet (BOZZA da far rivedere e pubblicare a un URL)
 
 Ultimo aggiornamento: <data>. Titolare del trattamento: <nome/ragione sociale, contatto>.
 

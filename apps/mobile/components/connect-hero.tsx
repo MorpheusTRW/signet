@@ -20,7 +20,7 @@ export function ConnectHero({ subtitle }: { subtitle?: string }) {
 
         <Animated.View entering={FadeInDown.duration(600).delay(150)} style={{ gap: 14 }}>
           <Text variant="label" color={palette.accent}>
-            Seeker Signal
+            Signet
           </Text>
           <Text variant="display" style={{ fontSize: 40, lineHeight: 44 }}>
             On-chain signals.{'\n'}You sign, in one tap.

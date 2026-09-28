@@ -25,7 +25,7 @@ export function Wordmark() {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <LogoMark size={18} />
-      <Text variant="label">Seeker Signal</Text>
+      <Text variant="label">Signet</Text>
     </View>
   )
 }

@@ -18,10 +18,10 @@ export function registerPrivacyRoute(app: FastifyInstance, env: Env): void {
 
   const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Privacy Policy — Seeker Signal</title>
+<title>Privacy Policy — Signet</title>
 <style>body{font:16px/1.6 system-ui,sans-serif;max-width:720px;margin:0 auto;padding:24px 16px;color:#1a1a1a}h1{font-size:1.6em}h2{font-size:1.15em;margin-top:1.6em}</style>
 </head><body>
-<h1>Privacy Policy — Seeker Signal</h1>
+<h1>Privacy Policy — Signet</h1>
 ${updated ? `<p>Last updated: ${updated}</p>` : ""}
 <p>Data controller: ${controller} — <a href="mailto:${email}">${email}</a></p>
 <h2>Data we process</h2>

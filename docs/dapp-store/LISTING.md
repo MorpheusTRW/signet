@@ -1,11 +1,11 @@
 # Scheda dApp Store (bozza, in inglese: pubblico internazionale)
 
-**Nome:** Seeker Signal
+**Nome:** Signet
 **Privacy policy URL:** https://seeker-signal-engine.fly.dev/privacy
 **Short description (max 30 caratteri):** `Solana token signals` (20 caratteri)
 
 **Long description:**
-Seeker Signal watches newly migrated Solana tokens and sends you a push alert with a plain-language
+Signet watches newly migrated Solana tokens and sends you a push alert with a plain-language
 risk summary: holder concentration, liquidity, mint/freeze authority and more.
 When you like a signal, tap "Approve entry": the app builds a fresh swap at that moment, shows the
 amount, slippage and platform fee, checks the transaction on your phone, and asks your wallet to sign.

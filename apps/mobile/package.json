@@ -1,6 +1,6 @@
 {
   "name": "@seeker-signal/mobile",
-  "displayName": "Seeker Signal",
+  "displayName": "Signet",
   "description": "Screener mobile-first con esecuzione biometrica per Solana Seeker.",
   "usecase": "Mobile",
   "keywords": [

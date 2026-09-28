@@ -105,10 +105,10 @@ function SettingsForm() {
       <Glass style={{ gap: 8 }}>
         <Text variant="label">Disclaimer</Text>
         <Text variant="secondary">
-          Seeker Signal is not financial advice. Signals are generated automatically from rules on on-chain data and
-          guarantee no outcome: newly launched tokens are extremely risky and you can lose your entire amount. We never
-          hold your keys: every trade is signed by you in your own wallet. A platform fee applies to every swap and is
-          always shown before you sign.
+          Signet is not financial advice. Signals are generated automatically from rules on on-chain data and guarantee
+          no outcome: newly launched tokens are extremely risky and you can lose your entire amount. We never hold your
+          keys: every trade is signed by you in your own wallet. A platform fee applies to every swap and is always
+          shown before you sign.
         </Text>
       </Glass>
     </Screen>

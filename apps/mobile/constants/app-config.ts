@@ -3,7 +3,7 @@ import type { SolanaCluster } from '@wallet-ui/react-native-web3js'
 
 // Tutte le soglie/URL di config, non nel codice (coerente con CLAUDE.md).
 export class AppConfig {
-  static name = 'Seeker Signal'
+  static name = 'Signet'
   static uri = 'https://seekersignal.app'
 
   // Mainnet-beta: Jupiter instrada solo su mainnet (nessuna liquidità reale
