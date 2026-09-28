@@ -41,7 +41,7 @@ export function Chip({ label, selected, onPress }: { label: string; selected: bo
       }}
       style={[styles.chip, selected ? styles.chipSelected : null]}
     >
-      <Text variant="mono" color={selected ? palette.mint : palette.textSecondary} style={{ fontSize: 13 }}>
+      <Text variant="mono" color={selected ? palette.accent : palette.textSecondary} style={{ fontSize: 13 }}>
         {label}
       </Text>
     </Pressable>
@@ -98,7 +98,7 @@ export function LiveDot({ label = 'Live' }: { label?: string }) {
         <Animated.View style={[styles.liveHalo, halo]} />
         <View style={styles.liveCore} />
       </View>
-      <Text variant="label" color={palette.mint}>
+      <Text variant="label" color={palette.accent}>
         {label}
       </Text>
     </View>
@@ -106,11 +106,11 @@ export function LiveDot({ label = 'Live' }: { label?: string }) {
 }
 
 /** Intestazione di schermata: micro-etichetta, titolo grande, elemento a destra. */
-export function Header({ eyebrow, title, right }: { eyebrow?: string; title: string; right?: ReactNode }) {
+export function Header({ eyebrow, title, right }: { eyebrow?: ReactNode; title: string; right?: ReactNode }) {
   return (
     <View style={{ gap: 6 }}>
       <View style={styles.headerRow}>
-        {eyebrow ? <Text variant="label">{eyebrow}</Text> : <View />}
+        {typeof eyebrow === 'string' ? <Text variant="label">{eyebrow}</Text> : (eyebrow ?? <View />)}
         {right}
       </View>
       <Text variant="display">{title}</Text>
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: palette.hairline,
   },
-  chipSelected: { backgroundColor: palette.mintSoft, borderColor: palette.mint + '66' },
+  chipSelected: { backgroundColor: palette.accentSoft, borderColor: palette.accent + '66' },
   tag: {
     paddingHorizontal: 9,
     paddingVertical: 4,
@@ -171,8 +171,8 @@ const styles = StyleSheet.create({
   },
   avatarInner: { flex: 1, backgroundColor: '#0B0F14', alignItems: 'center', justifyContent: 'center' },
   live: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-  liveCore: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: palette.mint },
-  liveHalo: { position: 'absolute', width: 8, height: 8, borderRadius: 4, borderWidth: 1, borderColor: palette.mint },
+  liveCore: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: palette.accent },
+  liveHalo: { position: 'absolute', width: 8, height: 8, borderRadius: 4, borderWidth: 1, borderColor: palette.accent },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 22 },
   backBar: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   backButton: {

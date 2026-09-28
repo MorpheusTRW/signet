@@ -42,7 +42,7 @@ export default function TabsLayout() {
           shadowOpacity: 0.5,
           shadowRadius: 20,
         },
-        tabBarActiveTintColor: palette.mint,
+        tabBarActiveTintColor: palette.accent,
         tabBarInactiveTintColor: palette.textTertiary,
         tabBarLabelStyle: { fontFamily: fonts.monoMedium, fontSize: 9.5, letterSpacing: 0.6 },
       }}
@@ -85,5 +85,5 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   icon: { width: 44, height: 30, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  iconFocused: { backgroundColor: palette.mintSoft },
+  iconFocused: { backgroundColor: palette.accentSoft },
 })

@@ -6,6 +6,7 @@ import { ConnectHero } from '@/components/connect-hero'
 import { SignalCard } from '@/components/signal-card'
 import { TierBadge } from '@/components/tier-badge'
 import { Header, LiveDot } from '@/components/ui/bits'
+import { Wordmark } from '@/components/ui/brand'
 import { Glass } from '@/components/ui/glass'
 import { Backdrop } from '@/components/ui/screen'
 import { Text } from '@/components/ui/text'
@@ -49,7 +50,7 @@ export default function FeedScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View style={{ gap: 14, marginBottom: 8 }}>
-            <Header eyebrow="Seeker Signal" title="Signals" right={<LiveDot />} />
+            <Header eyebrow={<Wordmark />} title="Signals" right={<LiveDot />} />
             {tierQuery.data ? (
               <TierBadge tier={tierQuery.data.tier} delaySeconds={tierQuery.data.limits.signalDelaySeconds} />
             ) : null}
@@ -60,8 +61,8 @@ export default function FeedScreen() {
           <RefreshControl
             refreshing={signalsQuery.isRefetching}
             onRefresh={() => void signalsQuery.refetch()}
-            tintColor={palette.mint}
-            colors={[palette.mint]}
+            tintColor={palette.accent}
+            colors={[palette.accent]}
             progressBackgroundColor="#0B0F14"
           />
         }

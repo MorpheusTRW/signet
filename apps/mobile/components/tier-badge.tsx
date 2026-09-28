@@ -4,9 +4,9 @@ import { palette, radius } from '@/constants/theme'
 import type { Tier } from '@/lib/api/types'
 
 const TIER: Record<Tier, { label: string; color: string; soft: string }> = {
-  free: { label: 'FREE', color: palette.amber, soft: palette.amberSoft },
-  pro: { label: 'PRO', color: palette.mint, soft: palette.mintSoft },
-  holder: { label: 'HOLDER', color: palette.violet, soft: palette.violetSoft },
+  free: { label: 'FREE', color: palette.textSecondary, soft: palette.surfaceStrong },
+  pro: { label: 'PRO', color: palette.accent, soft: palette.accentSoft },
+  holder: { label: 'HOLDER', color: palette.gold, soft: palette.goldSoft },
 }
 
 export function TierBadge({ tier, delaySeconds }: { tier: Tier; delaySeconds?: number | null }) {

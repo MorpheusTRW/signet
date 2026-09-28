@@ -10,14 +10,14 @@ export type AppStatusProps = {
 
 /** Esito di un'azione: banner colorato sotto il pulsante. */
 export function AppStatus({ description, status, title }: AppStatusProps) {
-  const color = status === 'danger' ? palette.red : palette.mint
+  const color = status === 'danger' ? palette.negative : palette.positive
   return (
     <View
       style={{
         borderRadius: radius.md,
         borderWidth: 1,
         borderColor: color + '44',
-        backgroundColor: status === 'danger' ? palette.redSoft : palette.mintSoft,
+        backgroundColor: status === 'danger' ? palette.negativeSoft : palette.positiveSoft,
         padding: 14,
         gap: 4,
       }}

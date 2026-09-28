@@ -50,7 +50,7 @@ function SettingsForm() {
             value={size}
             onChangeText={setSize}
             onEndEditing={commitSize}
-            selectionColor={palette.mint}
+            selectionColor={palette.accent}
           />
           <Text variant="heading" color={palette.textSecondary}>
             SOL
@@ -70,10 +70,10 @@ function SettingsForm() {
         </View>
       </Glass>
 
-      <Glass glow={settings.killSwitch ? palette.red : undefined} style={{ gap: 10 }}>
+      <Glass glow={settings.killSwitch ? palette.negative : undefined} style={{ gap: 10 }}>
         <View style={styles.switchRow}>
           <View style={{ flex: 1, gap: 4 }}>
-            <Text variant="heading" color={settings.killSwitch ? palette.red : palette.text}>
+            <Text variant="heading" color={settings.killSwitch ? palette.negative : palette.text}>
               Kill switch
             </Text>
             <Text variant="secondary">Blocks every new entry on this phone. Open positions are kept.</Text>
@@ -81,8 +81,8 @@ function SettingsForm() {
           <Switch
             value={settings.killSwitch}
             onValueChange={(v) => update({ killSwitch: v })}
-            trackColor={{ false: palette.surfaceStrong, true: palette.red + '88' }}
-            thumbColor={settings.killSwitch ? palette.red : palette.textSecondary}
+            trackColor={{ false: palette.surfaceStrong, true: palette.negative + '88' }}
+            thumbColor={settings.killSwitch ? palette.negative : palette.textSecondary}
           />
         </View>
       </Glass>
@@ -92,13 +92,13 @@ function SettingsForm() {
         <Row
           label="Status"
           value={status.data ? (serviceOk ? 'Operational' : 'Trading paused') : status.isError ? 'Unreachable' : '…'}
-          valueColor={status.data ? (serviceOk ? palette.mint : palette.red) : palette.textSecondary}
+          valueColor={status.data ? (serviceOk ? palette.positive : palette.negative) : palette.textSecondary}
         />
         <Divider />
         <Row
           label="Mode"
           value={status.data ? (status.data.tradingMode === 'paper' ? 'Paper (simulated)' : 'Live') : '…'}
-          valueColor={status.data?.tradingMode === 'live' ? palette.amber : undefined}
+          valueColor={status.data?.tradingMode === 'live' ? palette.warning : undefined}
         />
       </Glass>
 

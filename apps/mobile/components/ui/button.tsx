@@ -39,7 +39,7 @@ export function Button({
           {icon}
           <Text
             variant="heading"
-            color={variant === 'primary' ? palette.onAccent : variant === 'danger' ? palette.red : palette.text}
+            color={variant === 'primary' ? palette.onAccent : variant === 'danger' ? palette.negative : palette.text}
             style={styles.label}
           >
             {title}
@@ -81,5 +81,5 @@ const styles = StyleSheet.create({
   content: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   label: { fontSize: 16.5 },
   ghost: { backgroundColor: palette.surfaceStrong, borderWidth: 1, borderColor: palette.hairlineStrong },
-  danger: { backgroundColor: palette.redSoft, borderWidth: 1, borderColor: palette.red + '55' },
+  danger: { backgroundColor: palette.negativeSoft, borderWidth: 1, borderColor: palette.negative + '55' },
 })

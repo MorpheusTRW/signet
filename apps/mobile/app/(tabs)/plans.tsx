@@ -28,7 +28,7 @@ const PLANS: { tier: Tier; title: string; subtitle: string; feeBps: number; colo
     title: 'Pro',
     subtitle: '30 days · USDC or SKR',
     feeBps: 50,
-    color: palette.mint,
+    color: palette.accent,
     benefits: ['Real-time signals', 'Custom filters', 'Full history'],
   },
   {
@@ -36,7 +36,7 @@ const PLANS: { tier: Tier; title: string; subtitle: string; feeBps: number; colo
     title: 'Holder',
     subtitle: 'Hold or stake SKR',
     feeBps: 30,
-    color: palette.violet,
+    color: palette.gold,
     benefits: ['Everything in Pro, free', 'Lowest swap fees'],
   },
 ]

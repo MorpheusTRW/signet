@@ -36,11 +36,11 @@ function Summary({ discarded, signaled }: { discarded: CategoryStats; signaled: 
     <View style={{ gap: 16 }}>
       {/* La headline che deve convincere in 3 secondi. */}
       <Animated.View entering={FadeInDown.duration(450)}>
-        <Glass glow={palette.red} style={{ gap: 12 }}>
+        <Glass glow={palette.negative} style={{ gap: 12 }}>
           <Text variant="label">Rugs avoided</Text>
           {rugCatchRatePct !== null ? (
             <>
-              <Text variant="number" color={palette.red} style={{ fontSize: 64, lineHeight: 68 }}>
+              <Text variant="number" color={palette.negative} style={{ fontSize: 64, lineHeight: 68 }}>
                 {rugCatchRatePct}%
               </Text>
               <Text variant="body">of tokens flagged as high risk drop more than −90% within 24 hours.</Text>
@@ -61,10 +61,10 @@ function Summary({ discarded, signaled }: { discarded: CategoryStats; signaled: 
             <Metric
               label="24h avg"
               value={signedPct(s24.avgChangePct)}
-              accent={s24.avgChangePct !== null && s24.avgChangePct >= 0 ? palette.mint : palette.red}
+              accent={s24.avgChangePct !== null && s24.avgChangePct >= 0 ? palette.positive : palette.negative}
             />
             <Metric label="Signaled" value={String(signaled.total)} />
-            <Metric label="≥ 2x" value={String(s24.bigGainCount)} accent={palette.mint} />
+            <Metric label="≥ 2x" value={String(s24.bigGainCount)} accent={palette.positive} />
           </View>
         </Glass>
       </Animated.View>

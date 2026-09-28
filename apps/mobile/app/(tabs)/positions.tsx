@@ -26,7 +26,7 @@ export default function PositionsScreen() {
   const maxPct = portfolio.maxExposureFraction * 100
   const usedPct = portfolio.valueSol > 0 ? (portfolio.openExposureSol / portfolio.valueSol) * 100 : 0
   const fill = Math.min(1, usedPct / maxPct)
-  const pnlColor = portfolio.realizedPnlSol >= 0 ? palette.mint : palette.red
+  const pnlColor = portfolio.realizedPnlSol >= 0 ? palette.positive : palette.negative
 
   return (
     <Screen scroll>
@@ -48,8 +48,8 @@ export default function PositionsScreen() {
                 styles.fill,
                 {
                   width: `${Math.max(2, fill * 100)}%`,
-                  backgroundColor: fill > 0.85 ? palette.amber : palette.mint,
-                  shadowColor: fill > 0.85 ? palette.amber : palette.mint,
+                  backgroundColor: fill > 0.85 ? palette.warning : palette.accent,
+                  shadowColor: fill > 0.85 ? palette.warning : palette.accent,
                 },
               ]}
             />
@@ -90,14 +90,14 @@ export default function PositionsScreen() {
                 </Text>
               </View>
               {open ? (
-                <View style={[styles.badge, { backgroundColor: palette.mintSoft }]}>
-                  <Text variant="label" color={palette.mint}>
+                <View style={[styles.badge, { backgroundColor: palette.accentSoft }]}>
+                  <Text variant="label" color={palette.accent}>
                     Open
                   </Text>
                 </View>
               ) : (
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text variant="heading" color={pnlUp ? palette.mint : palette.red}>
+                  <Text variant="heading" color={pnlUp ? palette.positive : palette.negative}>
                     {pnlUp ? '+' : ''}
                     {p.pnlSol.toFixed(3)}
                   </Text>

@@ -8,12 +8,12 @@ export const colors = {
   border: palette.hairline,
   text: palette.text,
   textMuted: palette.textSecondary,
-  danger: palette.red,
-  success: palette.mint,
-  accent: palette.mint,
-  accentMuted: palette.mintSoft,
-  warning: palette.amber,
-  warningMuted: palette.amberSoft,
+  danger: palette.negative,
+  success: palette.positive,
+  accent: palette.accent,
+  accentMuted: palette.accentSoft,
+  warning: palette.warning,
+  warningMuted: palette.warningSoft,
 }
 
 export const appStyles = StyleSheet.create({
@@ -31,8 +31,8 @@ export const appStyles = StyleSheet.create({
   subtitle: { color: palette.textSecondary, fontSize: 15, fontFamily: fonts.regular },
   body: { color: palette.text, fontSize: 16, fontFamily: fonts.regular },
   textMuted: { color: palette.textSecondary, fontSize: 14, fontFamily: fonts.regular },
-  textDanger: { color: palette.red, fontFamily: fonts.medium },
-  textSuccess: { color: palette.mint, fontFamily: fonts.medium },
+  textDanger: { color: palette.negative, fontFamily: fonts.medium },
+  textSuccess: { color: palette.positive, fontFamily: fonts.medium },
   bigStat: { color: palette.text, fontSize: 48, fontFamily: fonts.bold, letterSpacing: -1.5 },
-  bigStatDanger: { color: palette.red, fontSize: 48, fontFamily: fonts.bold, letterSpacing: -1.5 },
+  bigStatDanger: { color: palette.negative, fontSize: 48, fontFamily: fonts.bold, letterSpacing: -1.5 },
 })

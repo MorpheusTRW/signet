@@ -37,8 +37,8 @@ function Blocked({ title, message }: { title: string; message: string }) {
   return (
     <Screen tabBar={false}>
       <BackBar title="Confirm entry" />
-      <Glass glow={palette.red} style={{ marginTop: 12 }}>
-        <Text variant="heading" color={palette.red}>
+      <Glass glow={palette.negative} style={{ marginTop: 12 }}>
+        <Text variant="heading" color={palette.negative}>
           {title}
         </Text>
         <Text variant="secondary">{message}</Text>
@@ -154,8 +154,8 @@ export default function ApproveEntryScreen() {
 
       {build.tradingMode === 'paper' ? (
         <Animated.View entering={FadeInDown.duration(450).delay(140)}>
-          <Glass glow={palette.amber}>
-            <Text variant="label" color={palette.amber}>
+          <Glass glow={palette.warning}>
+            <Text variant="label" color={palette.warning}>
               Paper mode
             </Text>
             <Text variant="secondary">

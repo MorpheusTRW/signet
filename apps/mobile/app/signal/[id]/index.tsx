@@ -68,7 +68,7 @@ export default function SignalDetailScreen() {
             <Text variant="mono">{shortAddress(signal.tokenMint, 6)}</Text>
             <SymbolView
               name={{ ios: copied ? 'checkmark' : 'doc.on.doc', android: copied ? 'check' : 'content_copy' }}
-              tintColor={copied ? palette.mint : palette.textTertiary}
+              tintColor={copied ? palette.accent : palette.textTertiary}
               size={14}
             />
           </Pressable>
@@ -147,7 +147,7 @@ export default function SignalDetailScreen() {
               keyboardType="decimal-pad"
               value={amountSol}
               onChangeText={setAmountSol}
-              selectionColor={palette.mint}
+              selectionColor={palette.accent}
               placeholder="0.0"
               placeholderTextColor={palette.textTertiary}
             />
