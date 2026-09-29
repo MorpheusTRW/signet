@@ -196,7 +196,12 @@ export default function ApproveEntryScreen() {
               connection,
             })
 
-            if (!validation.valid) {
+            // La simulazione della fee è il penultimo controllo: se fallisce lì, fee payer,
+            // program, destinatari, importo e account fee sono già stati verificati. Fallisce
+            // di sicuro con un wallet senza SOL (AccountNotFound). In paper non si firma nulla,
+            // quindi quel solo caso è tollerato e dichiarato; in live resta un blocco.
+            const feeUnverified = !validation.valid && validation.reason === 'fee_simulation_failed'
+            if (!validation.valid && !(build.tradingMode === 'paper' && feeUnverified)) {
               return {
                 status: 'danger',
                 title: 'Validation failed: do not sign',
@@ -211,8 +216,9 @@ export default function ApproveEntryScreen() {
               return {
                 status: 'success',
                 title: 'Paper position opened',
-                description:
-                  'All checks passed. Tracked at the real pool price in Positions — no real transaction sent.',
+                description: feeUnverified
+                  ? 'Transaction checks passed (fee simulation skipped: this wallet has no SOL). Tracked at the real pool price in Positions.'
+                  : 'All checks passed. Tracked at the real pool price in Positions — no real transaction sent.',
               } as const
             }
 
