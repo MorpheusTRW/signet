@@ -19,7 +19,7 @@ Fonte: https://solanamobile.radiant.nexus (letto il 2026-09-29).
 | 2 | Iscrizione su Align + profilo (banner: `docs/hackathon/banner.png`) | tu | ⬜ |
 | 3 | Repo GitHub pubblico con codice e README | io | ✅ |
 | 4 | Release GitHub v1.0.1 con l'APK firmato | io | ✅ |
-| 5 | Video demo (2:13, `signet-demo.mp4`) | io | ✅ |
+| 5 | Video demo (2:58, `signet-demo-3min.mp4` sulla Scrivania) | io | ✅ |
 | 6 | Pitch deck (artifact, da scaricare in PDF) | io | ✅ |
 | 7 | Invio finale su Align (+ accettazione dei termini) | tu | ⬜ |
 
