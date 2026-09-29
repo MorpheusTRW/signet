@@ -1,7 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { StyleSheet, Switch, TextInput, View } from 'react-native'
+import { useMobileWallet } from '@wallet-ui/react-native-web3js'
+import { ConnectWalletButton } from '@/components/connect-wallet-button'
 import { Chip, Divider, Header, Row } from '@/components/ui/bits'
+import { Button } from '@/components/ui/button'
+import { shortAddress } from '@/lib/format'
 import { Glass } from '@/components/ui/glass'
 import { Screen } from '@/components/ui/screen'
 import { Text } from '@/components/ui/text'
@@ -28,6 +32,8 @@ function SettingsForm() {
   const { settings, update } = useSettings()
   const [size, setSize] = useState(String(settings.defaultSizeSol))
   const status = useQuery({ queryKey: ['status'], queryFn: getStatus, refetchInterval: 15_000 })
+  const { account, disconnect } = useMobileWallet()
+  const pubkey = account?.address.toBase58()
 
   function commitSize() {
     const value = Number(size.replace(',', '.'))
@@ -40,6 +46,18 @@ function SettingsForm() {
   return (
     <Screen scroll>
       <Header eyebrow="Preferences" title="Settings" />
+
+      <Glass style={{ gap: 14 }}>
+        <Text variant="label">Wallet</Text>
+        {pubkey ? (
+          <>
+            <Row label="Connected" value={shortAddress(pubkey, 6)} valueColor={palette.positive} />
+            <Button title="Disconnect" variant="ghost" onPress={() => void disconnect()} />
+          </>
+        ) : (
+          <ConnectWalletButton />
+        )}
+      </Glass>
 
       <Glass style={{ gap: 16 }}>
         <Text variant="label">Default amount</Text>
