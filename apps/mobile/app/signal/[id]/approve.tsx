@@ -33,6 +33,13 @@ function describeValidationFailure(reason: string): string {
   return `Validation failed: ${reason}`
 }
 
+/** Jupiter restituisce l'impatto in punti percentuali come stringa a piena precisione. */
+function formatImpact(raw: string): string {
+  const value = Math.abs(Number(raw))
+  if (!Number.isFinite(value)) return `${raw}%`
+  return value < 0.01 ? '<0.01%' : `${value.toFixed(2)}%`
+}
+
 function Blocked({ title, message }: { title: string; message: string }) {
   return (
     <Screen tabBar={false}>
@@ -154,7 +161,7 @@ export default function ApproveEntryScreen() {
           <Divider />
           <Row label="Max slippage" value={`${build.quote.slippageBps / 100}%`} />
           <Divider />
-          <Row label="Price impact" value={`${build.quote.priceImpactPct}%`} />
+          <Row label="Price impact" value={formatImpact(build.quote.priceImpactPct)} />
         </Glass>
       </Animated.View>
 
