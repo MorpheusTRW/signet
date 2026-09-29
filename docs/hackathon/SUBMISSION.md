@@ -17,7 +17,7 @@ Fonte: https://solanamobile.radiant.nexus (letto il 2026-09-29).
 |---|---|---|---|
 | 1 | Carta su fly.io/trial — il server deve restare acceso mentre i giudici provano l'APK | tu | ⬜ |
 | 2 | Iscrizione su Align + profilo (banner: `docs/hackathon/banner.png`) | tu | ⬜ |
-| 3 | Repo GitHub con codice e README (privato) | io | ✅ |
+| 3 | Repo GitHub pubblico con codice e README | io | ✅ |
 | 4 | Release GitHub v1.0.1 con l'APK firmato | io | ✅ |
 | 5 | Video demo (2:13, `signet-demo.mp4`) | io | ✅ |
 | 6 | Pitch deck (artifact, da scaricare in PDF) | io | ✅ |
@@ -49,7 +49,7 @@ Paper mode is the default: positions open at the real pool price and follow the 
 
 **SKR integration:** holding SKR (checked on-chain) unlocks the Holder tier: real-time signals instead of a 45 s delay, unlimited signals, full history and the lowest platform fee (0.30% vs 0.75%).
 
-**Links:** GitHub https://github.com/MorpheusTRW/signet (privato: aggiungere i giudici come collaboratori) · APK https://github.com/MorpheusTRW/signet/releases/tag/v1.0.1 · Demo video `<da inserire>` · Privacy https://seeker-signal-engine.fly.dev/privacy
+**Links:** GitHub https://github.com/MorpheusTRW/signet (pubblico) · APK https://github.com/MorpheusTRW/signet/releases/tag/v1.0.1 · Demo video `<da inserire>` · Privacy https://seeker-signal-engine.fly.dev/privacy
 
 ## Note oneste da tenere a mente
 - Il track record reale è ripartito da zero il 28/09: nel deck e nel video mostriamo il metodo e i numeri del backtest, non statistiche live che ancora non ci sono.
