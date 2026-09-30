@@ -1,19 +1,11 @@
 import type { ReactElement, ReactNode } from 'react'
-import { Image, ScrollView, StyleSheet, View, type RefreshControlProps, useWindowDimensions } from 'react-native'
+import { ScrollView, StyleSheet, View, type RefreshControlProps } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { palette, TAB_BAR_CLEARANCE } from '@/constants/theme'
 
-const aurora = require('@/assets/images/aurora.jpg')
-
-/** Sfondo del design system: nero con bagliore "aurora" in alto. */
+/** Sfondo del design system: nero pieno, come nei mockup. */
 export function Backdrop() {
-  const { width } = useWindowDimensions()
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: palette.bg }]} />
-      <Image source={aurora} style={{ position: 'absolute', top: 0, left: 0, width, height: width }} />
-    </View>
-  )
+  return <View style={[StyleSheet.absoluteFill, { backgroundColor: palette.bg }]} pointerEvents="none" />
 }
 
 /**

@@ -1,14 +1,13 @@
 import * as Haptics from 'expo-haptics'
-import { LinearGradient } from 'expo-linear-gradient'
 import type { ReactNode } from 'react'
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
-import { gradients, palette, radius } from '@/constants/theme'
+import { fonts, palette, radius } from '@/constants/theme'
 import { Text } from './text'
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 
-type Variant = 'primary' | 'ghost' | 'danger'
+type Variant = 'primary' | 'ivory' | 'ghost' | 'danger'
 
 /** Pulsante del design system: leggera compressione + vibrazione al tocco. */
 export function Button({
@@ -33,13 +32,19 @@ export function Button({
   const label = (
     <View style={styles.content}>
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? palette.onAccent : palette.text} />
+        <ActivityIndicator color={variant === 'primary' || variant === 'ivory' ? palette.onAccent : palette.text} />
       ) : (
         <>
           {icon}
           <Text
             variant="heading"
-            color={variant === 'primary' ? palette.onAccent : variant === 'danger' ? palette.negative : palette.text}
+            color={
+              variant === 'primary' || variant === 'ivory'
+                ? palette.onAccent
+                : variant === 'danger'
+                  ? palette.negative
+                  : palette.text
+            }
             style={styles.label}
           >
             {title}
@@ -65,21 +70,24 @@ export function Button({
       }}
       style={[animated, { opacity: disabled ? 0.4 : 1 }]}
     >
-      {variant === 'primary' ? (
-        <LinearGradient colors={gradients.accent} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.base}>
-          {label}
-        </LinearGradient>
-      ) : (
-        <View style={[styles.base, variant === 'danger' ? styles.danger : styles.ghost]}>{label}</View>
-      )}
+      <View
+        style={[
+          styles.base,
+          styles[variant],
+        ]}
+      >
+        {label}
+      </View>
     </AnimatedPressable>
   )
 }
 
 const styles = StyleSheet.create({
-  base: { height: 56, borderRadius: radius.md + 2, alignItems: 'center', justifyContent: 'center' },
+  base: { height: 56, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   content: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  label: { fontSize: 16.5 },
-  ghost: { backgroundColor: palette.surfaceStrong, borderWidth: 1, borderColor: palette.hairlineStrong },
+  label: { fontFamily: fonts.display, fontSize: 15 },
+  primary: { backgroundColor: palette.accent },
+  ivory: { backgroundColor: palette.ivory },
+  ghost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: palette.hairlineStrong },
   danger: { backgroundColor: palette.negativeSoft, borderWidth: 1, borderColor: palette.negative + '55' },
 })

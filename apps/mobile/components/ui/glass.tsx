@@ -1,7 +1,7 @@
 import { StyleSheet, View, type ViewProps } from 'react-native'
 import { palette, radius } from '@/constants/theme'
 
-/** Pannello "vetro": superficie traslucida con bordo sottile; `glow` tinge bordo e alone. */
+/** Pannello: superficie #1A1A1E con bordo sottile; `glow` tinge bordo e alone (come la card del segnale). */
 export function Glass({ glow, style, children, ...rest }: ViewProps & { glow?: string }) {
   return (
     <View
@@ -13,8 +13,7 @@ export function Glass({ glow, style, children, ...rest }: ViewProps & { glow?: s
               // Niente elevation: su Android l'ombra di una superficie traslucida si vede
               // attraverso il pannello (rettangolo scuro interno). Il bagliore è reso da
               // bordo e fondo tinti; shadow* resta solo per iOS.
-              borderColor: glow + '66',
-              backgroundColor: glow + '0F',
+              borderColor: glow,
               shadowColor: glow,
               shadowOpacity: 0.35,
               shadowRadius: 18,
@@ -33,7 +32,7 @@ const styles = StyleSheet.create({
   base: {
     backgroundColor: palette.surface,
     borderColor: palette.hairline,
-    borderWidth: StyleSheet.hairlineWidth * 2,
+    borderWidth: 1,
     borderRadius: radius.lg,
     padding: 18,
     gap: 10,

@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated'
 import { router } from 'expo-router'
 import { SymbolView } from 'expo-symbols'
-import { gradients, palette, radius } from '@/constants/theme'
+import { fonts, gradients, palette, radius } from '@/constants/theme'
 import { Text } from './text'
 
 /** Valore con etichetta tecnica sopra. */
@@ -156,7 +156,7 @@ export function Row({ label, value, valueColor }: { label: string; value: string
   return (
     <View style={styles.row}>
       <Text variant="secondary">{label}</Text>
-      <Text variant="body" color={valueColor} style={{ fontFamily: 'SpaceGrotesk_500Medium' }}>
+      <Text variant="body" color={valueColor} style={{ fontFamily: fonts.medium }}>
         {value}
       </Text>
     </View>
