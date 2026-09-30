@@ -161,6 +161,14 @@
   - **Posizioni dell'utente** (`user_positions`): nessuna apertura automatica. In paper mode "Verify (paper)" apre una posizione con fill simulato a prodotto costante sulle riserve reali della pool (fee di piattaforma del tier inclusa, fee della pool no: stima leggermente ottimistica); valore/PnL seguono il prezzo reale; chiusura manuale. Saldo virtuale per wallet `PAPER_BALANCE_SOL` (default 10). Limite del 20% ora **per wallet** (paper: saldo virtuale + PnL realizzato; live: 20% del saldo SOL reale letto dalla chain), anche in `/build-swap` e ricontrollato nell'app.
   - Limite noto: gli endpoint delle posizioni paper non verificano che chi chiama possieda il wallet (nessun fondo reale coinvolto); da legare all'API key del device prima del live.
 
+- **UI dai mockup + engagement (2026-09-30)** — `design/screens/` (Feed, Sign, Dodged, Recap). Regola: si premiano le buone decisioni, mai il volume.
+  - Engine: `GET /radar` (token valutati/scartati oggi UTC + ultimi scarti col motivo più pesante), `GET /dodged` (scartati delle ultime 24h crollati oltre `RUG_THRESHOLD_PCT`, prezzo letto adesso dalla pool, cache condivisa `DODGED_CACHE_TTL_MS`; streak del wallet), `GET /recap` (settimana ISO, rug schivati, segnali approvati, streak). I motivi di rischio sono ora ordinati dal più pesante.
+  - Streak di disciplina: giorni dal primo utilizzo (device o prima posizione) senza panic sell (chiusura in perdita entro `PANIC_SELL_WINDOW_MINUTES`). Non richiede di tradare; il 20% è già imposto a ogni entry.
+  - App: tema nero/avorio/arancione con Unbounded + DM Sans + JetBrains Mono; `FingerprintRings` (react-native-svg) per radar, impronta, sigillo e card del recap; tab Feed/Dodged/Recap/Positions/Settings (Track record e Plans dalle Impostazioni). Il sigillo si imprime **solo dopo** `signAndSendTransactions` riuscita (in paper mode niente sigillo: nessuna firma). Recap: immagine con react-native-view-shot, condivisione col foglio di sistema (didascalia copiata negli appunti: il foglio Android passa solo l'immagine), salvataggio in galleria con permesso solo foto.
+  - Nuove dipendenze native (serve una nuova development build): react-native-svg, react-native-view-shot, expo-sharing, expo-media-library.
+  - Onestà del dato: sui dati reali del 30/09 anche i segnali *non* scartati crollano quasi tutti (mediana a 1h −99,6%). "Rug schivati" dice un fatto vero (token ad alto rischio mai notificati, poi crollati) ma non dimostra che i segnali approvati vadano meglio.
+  - Limiti: le posizioni live non sono registrate sul server, quindi recap e streak contano solo le entry paper; giorni in UTC.
+
 ### Da fare
 - % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
