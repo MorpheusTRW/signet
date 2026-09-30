@@ -115,3 +115,47 @@ export interface PositionsResponse {
   portfolio: PortfolioSummary
   positions: PositionItem[]
 }
+
+// In sync con services/engine/src/routes/engagement.ts.
+export interface RejectedToken {
+  signalId: string
+  tokenSymbol: string | null
+  tokenName: string | null
+  imageUrl: string | null
+  /** Motivo più pesante dello scarto. */
+  reason: string
+  createdAt: string
+}
+
+export interface RadarResponse {
+  since: string
+  scannedToday: number
+  rejectedToday: number
+  recentRejected: RejectedToken[]
+}
+
+export interface DisciplineStreak {
+  days: number
+  /** Ultimi 7 giorni (dal più vecchio a oggi): true se dentro la streak. */
+  lastSevenDays: boolean[]
+  panicSellWindowMinutes: number
+  maxExposureFraction: number
+}
+
+export interface DodgedResponse {
+  windowHours: number
+  rugThresholdPct: number
+  rejectedCount: number
+  rugCount: number
+  rugs: (RejectedToken & { changePct: number })[]
+  streak: DisciplineStreak | null
+}
+
+export interface RecapResponse {
+  year: number
+  week: number
+  weekStart: string
+  rugsDodged: number
+  signalsApproved: number
+  streakDays: number
+}

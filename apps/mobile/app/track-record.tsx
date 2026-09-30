@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
-import { Divider, Header, Metric, Row } from '@/components/ui/bits'
+import { BackBar, Divider, Header, Metric, Row } from '@/components/ui/bits'
 import { Glass } from '@/components/ui/glass'
 import { Screen } from '@/components/ui/screen'
 import { Text } from '@/components/ui/text'
@@ -18,7 +18,8 @@ export default function TrackRecordScreen() {
   const query = useQuery({ queryKey: ['track-record'], queryFn: getTrackRecord, refetchInterval: REFETCH_INTERVAL_MS })
 
   return (
-    <Screen scroll>
+    <Screen scroll tabBar={false}>
+      <BackBar />
       <Header
         eyebrow={query.data?.source === 'synthetic' ? 'Simulated data · dev only' : 'Measured on real pool prices'}
         title="Track record"

@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native'
 import Animated, { FadeInDown } from 'react-native-reanimated'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { SymbolView } from 'expo-symbols'
-import { Header } from '@/components/ui/bits'
+import { BackBar, Header } from '@/components/ui/bits'
 import { Button } from '@/components/ui/button'
 import { Glass } from '@/components/ui/glass'
 import { Screen } from '@/components/ui/screen'
@@ -47,7 +47,8 @@ export default function PlansScreen() {
   const tierQuery = useQuery({ queryKey: ['me-tier', pubkey], queryFn: () => getMeTier(pubkey!), enabled: !!pubkey })
 
   return (
-    <Screen scroll>
+    <Screen scroll tabBar={false}>
+      <BackBar />
       <Header eyebrow="Access" title="Plans" />
       {!pubkey ? <Text variant="secondary">Connect your wallet to see your current plan.</Text> : null}
 

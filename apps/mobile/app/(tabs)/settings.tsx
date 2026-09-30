@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { StyleSheet, Switch, TextInput, View } from 'react-native'
+import { Pressable, StyleSheet, Switch, TextInput, View } from 'react-native'
+import { router } from 'expo-router'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { ConnectWalletButton } from '@/components/connect-wallet-button'
 import { Chip, Divider, Header, Row } from '@/components/ui/bits'
@@ -120,6 +121,28 @@ function SettingsForm() {
         />
       </Glass>
 
+      <Glass style={{ gap: 4, paddingVertical: 8 }}>
+        {[
+          { label: 'Track record', detail: 'Measured on real pool prices', href: '/track-record' as const },
+          { label: 'Plans', detail: 'Free, Pro and SKR Holder', href: '/plans' as const },
+        ].map((link, index) => (
+          <Pressable
+            key={link.href}
+            accessibilityRole="link"
+            onPress={() => router.push(link.href)}
+            style={({ pressed }) => [styles.linkRow, index === 0 && styles.linkDivider, pressed && { opacity: 0.7 }]}
+          >
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text variant="heading">{link.label}</Text>
+              <Text variant="caption">{link.detail}</Text>
+            </View>
+            <Text variant="heading" color={palette.accent}>
+              →
+            </Text>
+          </Pressable>
+        ))}
+      </Glass>
+
       <Glass style={{ gap: 8 }}>
         <Text variant="label">Disclaimer</Text>
         <Text variant="secondary">
@@ -145,4 +168,6 @@ const styles = StyleSheet.create({
   },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+  linkDivider: { borderBottomWidth: 1, borderBottomColor: palette.hairline },
 })

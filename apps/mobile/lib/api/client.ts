@@ -3,9 +3,12 @@ import { AppConfig } from '@/constants/app-config'
 import type {
   BuildSwapErrorBody,
   BuildSwapResponse,
+  DodgedResponse,
   EngineStatus,
   MeTierResponse,
   PositionsResponse,
+  RadarResponse,
+  RecapResponse,
   RegisterDeviceResponse,
   TrackRecordStats,
 } from './types'
@@ -70,6 +73,18 @@ export function openPaperPosition(params: { signalId: string; pubkey: string; am
 
 export function closePosition(id: string, pubkey: string) {
   return postJson<{ id: string; pnlSol: number }>(`/positions/${encodeURIComponent(id)}/close`, { pubkey })
+}
+
+export function getRadar(): Promise<RadarResponse> {
+  return request<RadarResponse>('/radar')
+}
+
+export function getDodged(pubkey?: string): Promise<DodgedResponse> {
+  return request<DodgedResponse>(`/dodged${pubkey ? `?pubkey=${encodeURIComponent(pubkey)}` : ''}`)
+}
+
+export function getRecap(pubkey: string): Promise<RecapResponse> {
+  return request<RecapResponse>(`/recap?pubkey=${encodeURIComponent(pubkey)}`)
 }
 
 export function getTrackRecord(): Promise<TrackRecordStats> {
