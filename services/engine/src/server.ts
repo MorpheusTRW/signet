@@ -14,6 +14,8 @@ import type { KillSwitch } from "./safety/kill-switch.js";
 import type { RateLimiter } from "./safety/rate-limiter.js";
 import { registerBuildSwapRoute, type BuildSwapRouteDeps } from "./routes/build-swap.js";
 import { registerDevicesRoutes } from "./routes/devices.js";
+import { registerEngagementRoutes } from "./routes/engagement.js";
+import { RejectedOutcomes } from "./engagement/rejected-outcomes.js";
 import { registerMeRoutes } from "./routes/me.js";
 import { registerPrivacyRoute } from "./routes/privacy.js";
 import { registerPositionsRoutes } from "./routes/positions.js";
@@ -77,6 +79,22 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     rpc: deps.priceRpc,
   });
   registerDevicesRoutes(app, deps.devicesRepo);
+  registerEngagementRoutes(app, {
+    signalsRepo: deps.signalsRepo,
+    devicesRepo: deps.devicesRepo,
+    userPositionsRepo: deps.userPositionsRepo,
+    rejectedOutcomes: new RejectedOutcomes({
+      trackRecordsRepo: deps.trackRecordsRepo,
+      marketsRepo: deps.marketsRepo,
+      rpc: deps.priceRpc,
+      source: deps.trackRecordSource,
+      cacheTtlMs: env.DODGED_CACHE_TTL_MS,
+    }),
+    tradingMode: deps.buildSwap.tradingMode,
+    rugThresholdPct: env.RUG_THRESHOLD_PCT,
+    panicSellWindowMinutes: env.PANIC_SELL_WINDOW_MINUTES,
+    maxExposureFraction: deps.paperTradingConfig.maxExposureFraction,
+  });
   registerMeRoutes(app, deps.resolveTierDeps);
   registerTrackRecordRoutes(app, deps.trackRecordsRepo, deps.trackRecordSource);
   registerBuildSwapRoute(app, {

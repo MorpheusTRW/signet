@@ -88,4 +88,11 @@ export class DevicesRepo {
     const rows = this.db.prepare("SELECT * FROM devices").all() as DeviceRow[];
     return rows.map(rowToDevice);
   }
+
+  findByWallet(walletPubkey: string): DeviceRecord | undefined {
+    const row = this.db
+      .prepare("SELECT * FROM devices WHERE wallet_pubkey = ?")
+      .get(walletPubkey) as DeviceRow | undefined;
+    return row ? rowToDevice(row) : undefined;
+  }
 }

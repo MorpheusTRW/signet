@@ -96,4 +96,22 @@ export class SignalsRepo {
       .all(sinceIso, limit) as SignalRow[];
     return rows.map(rowToSignal);
   }
+
+  /** Quanti token sono stati valutati da `sinceIso` e quanti scartati (rischio alto). */
+  countSince(sinceIso: string): { total: number; high: number } {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) AS total, COALESCE(SUM(risk_level = 'high'), 0) AS high
+         FROM signals WHERE created_at >= ?`,
+      )
+      .get(sinceIso) as { total: number; high: number };
+    return { total: row.total, high: row.high };
+  }
+
+  listRecentByLevel(level: Signal["riskReport"]["level"], limit: number): Signal[] {
+    const rows = this.db
+      .prepare("SELECT * FROM signals WHERE risk_level = ? ORDER BY created_at DESC LIMIT ?")
+      .all(level, limit) as SignalRow[];
+    return rows.map(rowToSignal);
+  }
 }

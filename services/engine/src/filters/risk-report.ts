@@ -44,7 +44,11 @@ export function computeRiskReport(event: RawLaunchEvent): RiskReport {
       ? "medium"
       : "low";
 
-  const failedReasons = checks.filter((c) => !c.passed).map((c) => c.reason);
+  // Dal motivo più pesante al più leggero: l'app mostra il primo come "motivo dello scarto".
+  const failedReasons = checks
+    .filter((c) => !c.passed)
+    .sort((a, b) => b.riskPoints - a.riskPoints)
+    .map((c) => c.reason);
   const reasons =
     failedReasons.length > 0
       ? failedReasons

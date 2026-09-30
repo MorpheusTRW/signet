@@ -136,4 +136,15 @@ export class TrackRecordsRepo {
       .all(source, limit) as TrackRecordRow[];
     return rows.map(rowToEntry);
   }
+
+  /** Marcature di una categoria create da `sinceIso`, più recenti prima. */
+  listSince(source: TrackRecordSource, category: TrackRecordCategory, sinceIso: string): TrackRecordEntry[] {
+    const rows = this.db
+      .prepare(
+        `SELECT * FROM track_records WHERE source = ? AND category = ? AND created_at >= ?
+         ORDER BY created_at DESC`,
+      )
+      .all(source, category, sinceIso) as TrackRecordRow[];
+    return rows.map(rowToEntry);
+  }
 }

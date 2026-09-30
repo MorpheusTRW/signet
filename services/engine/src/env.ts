@@ -62,6 +62,14 @@ const envSchema = z.object({
   // Rate limit di /build-swap per wallet (richieste al minuto).
   BUILD_SWAP_RATE_LIMIT_PER_MIN: z.coerce.number().int().positive().default(10),
 
+  // Engagement (radar, rug schivati, recap): premia le buone decisioni, mai il volume.
+  // Un token scartato conta come "rug schivato" se il suo prezzo scende almeno di questa %.
+  RUG_THRESHOLD_PCT: z.coerce.number().min(-100).max(0).default(-90),
+  // Chiusura in perdita entro N minuti dall'apertura = "panic sell": azzera la streak di disciplina.
+  PANIC_SELL_WINDOW_MINUTES: z.coerce.number().positive().default(15),
+  // Le riserve delle pool per /dodged sono rilette al massimo ogni N ms (condivise fra i wallet).
+  DODGED_CACHE_TTL_MS: z.coerce.number().int().positive().default(60_000),
+
   // Privacy policy servita su GET /privacy (richiesta dalla Publisher Policy del
   // dApp Store). Senza entrambi i campi la pagina non viene pubblicata (404).
   PRIVACY_CONTROLLER_NAME: z.string().optional(),
