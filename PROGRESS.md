@@ -169,6 +169,8 @@
   - Onestà del dato: sui dati reali del 30/09 anche i segnali *non* scartati crollano quasi tutti (mediana a 1h −99,6%). "Rug schivati" dice un fatto vero (token ad alto rischio mai notificati, poi crollati) ma non dimostra che i segnali approvati vadano meglio.
   - Limiti: le posizioni live non sono registrate sul server, quindi recap e streak contano solo le entry paper; giorni in UTC.
 
+- **Storico chiamate e quota FREE (2026-10-01)**: `GET /calls` (paginato a cursore, filtro passate/scartate) con l'esito di ogni chiamata (+1h, +24h e adesso dalla pool); FREE vede le ultime `FREE_HISTORY_HOURS` col suo ritardo, PRO/HOLDER da sempre. Schermata "All calls" dal Feed. **Bug corretto**: la quota FREE di 20/giorno contava anche i token scartati (che il feed mostra come "Just rejected"), quindi si esauriva e il feed restava senza segnali; ora la query delle consegne conta solo i segnali passati (feed, push e `/me/tier.signalsToday`). Il feed mostra "N/20 free signals today" e "Daily limit reached".
+
 ### Da fare
 - % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 
