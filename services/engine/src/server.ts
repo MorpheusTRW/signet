@@ -13,6 +13,7 @@ import { registerAdminRoutes } from "./routes/admin.js";
 import type { KillSwitch } from "./safety/kill-switch.js";
 import type { RateLimiter } from "./safety/rate-limiter.js";
 import { registerBuildSwapRoute, type BuildSwapRouteDeps } from "./routes/build-swap.js";
+import { registerCallsRoutes } from "./routes/calls.js";
 import { registerDevicesRoutes } from "./routes/devices.js";
 import { registerEngagementRoutes } from "./routes/engagement.js";
 import { RejectedOutcomes } from "./engagement/rejected-outcomes.js";
@@ -76,6 +77,13 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     killSwitch: deps.killSwitch,
     tradingMode: deps.buildSwap.tradingMode,
     maxSwapSol: env.MAX_SWAP_SOL,
+    rpc: deps.priceRpc,
+  });
+  registerCallsRoutes(app, {
+    signalsRepo: deps.signalsRepo,
+    trackRecordsRepo: deps.trackRecordsRepo,
+    marketsRepo: deps.marketsRepo,
+    resolveTierDeps: deps.resolveTierDeps,
     rpc: deps.priceRpc,
   });
   registerDevicesRoutes(app, deps.devicesRepo);

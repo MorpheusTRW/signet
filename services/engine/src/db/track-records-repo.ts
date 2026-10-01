@@ -147,4 +147,13 @@ export class TrackRecordsRepo {
       .all(source, category, sinceIso) as TrackRecordRow[];
     return rows.map(rowToEntry);
   }
+
+  /** Marcatura di ogni segnale richiesto (al più una per segnale). */
+  findBySignalIds(signalIds: string[]): Map<string, TrackRecordEntry> {
+    if (signalIds.length === 0) return new Map();
+    const rows = this.db
+      .prepare(`SELECT * FROM track_records WHERE signal_id IN (${signalIds.map(() => "?").join(",")})`)
+      .all(...signalIds) as TrackRecordRow[];
+    return new Map(rows.map((row) => [row.signal_id, rowToEntry(row)]));
+  }
 }

@@ -114,4 +114,57 @@ export class SignalsRepo {
       .all(level, limit) as SignalRow[];
     return rows.map(rowToSignal);
   }
+
+  /**
+   * Pagina dello storico, più recenti prima. `sinceIso` = limite inferiore (finestra del tier,
+   * null = da sempre), `untilIso` = limite superiore incluso (ritardo del tier), `beforeIso` =
+   * cursore della pagina precedente (escluso).
+   */
+  listPage(params: {
+    sinceIso: string | null;
+    untilIso: string;
+    beforeIso: string | null;
+    filter: CallsFilter;
+    limit: number;
+  }): Signal[] {
+    const { where, args } = callsWhere(params);
+    const rows = this.db
+      .prepare(`SELECT * FROM signals WHERE ${where} ORDER BY created_at DESC LIMIT ?`)
+      .all(...args, params.limit) as SignalRow[];
+    return rows.map(rowToSignal);
+  }
+
+  /** Conteggi per lo storico: totale, passati (rischio basso/medio) e scartati (alto). */
+  countWindow(params: { sinceIso: string | null; untilIso: string }): { total: number; rejected: number } {
+    const { where, args } = callsWhere({ ...params, beforeIso: null, filter: "all" });
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) AS total, COALESCE(SUM(risk_level = 'high'), 0) AS rejected FROM signals WHERE ${where}`,
+      )
+      .get(...args) as { total: number; rejected: number };
+    return row;
+  }
+}
+
+export type CallsFilter = "all" | "passed" | "rejected";
+
+function callsWhere(params: {
+  sinceIso: string | null;
+  untilIso: string;
+  beforeIso: string | null;
+  filter: CallsFilter;
+}): { where: string; args: string[] } {
+  const clauses = ["created_at <= ?"];
+  const args = [params.untilIso];
+  if (params.sinceIso !== null) {
+    clauses.push("created_at >= ?");
+    args.push(params.sinceIso);
+  }
+  if (params.beforeIso !== null) {
+    clauses.push("created_at < ?");
+    args.push(params.beforeIso);
+  }
+  if (params.filter === "passed") clauses.push("risk_level != 'high'");
+  if (params.filter === "rejected") clauses.push("risk_level = 'high'");
+  return { where: clauses.join(" AND "), args };
 }
