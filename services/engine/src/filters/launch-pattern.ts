@@ -1,4 +1,5 @@
 import type { RawLaunchEvent } from "../ingest/event-source.js";
+import { MIN_NORMAL_MIGRATION_LIQUIDITY_SOL } from "./prefilter.js";
 import type { FilterCheck } from "./types.js";
 
 /*
@@ -10,8 +11,6 @@ import type { FilterCheck } from "./types.js";
  * Campione piccolo e finestra breve: sono euristiche, non garanzie.
  */
 
-/** Liquidità di una migrazione pump.fun standard: ~85 SOL. Molto meno è anomalo. */
-const MIN_NORMAL_MIGRATION_LIQUIDITY_SOL = 80;
 
 export function checkAnomalousMigration(event: RawLaunchEvent): FilterCheck {
   if (event.pumpMigration && event.initialLiquiditySol < MIN_NORMAL_MIGRATION_LIQUIDITY_SOL) {
@@ -90,7 +89,8 @@ export function checkFreshDevWallet(event: RawLaunchEvent): FilterCheck {
       id: "fresh-dev-wallet",
       passed: false,
       reason: `Dev wallet activated ${Math.max(0, Math.round(minutes))} min before launch (burner)`,
-      riskPoints: 15,
+      // 2026-10-01: wallet dev appena creati crollano più degli altri (80% contro 60–70%).
+      riskPoints: 35,
     };
   }
   return { id: "fresh-dev-wallet", passed: true, reason: "Dev wallet not created for this launch", riskPoints: 0 };

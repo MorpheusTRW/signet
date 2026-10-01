@@ -12,8 +12,10 @@ export function checkSnipedWallets(event: RawLaunchEvent): FilterCheck {
     return {
       id: "sniped-wallets",
       passed: false,
-      reason: "Early-block snipes unverified",
-      riskPoints: 0,
+      // Senza analisi del lancio (bundle, sniper, dev buy) il token non è raccomandabile:
+      // prima passava come "Low" solo perché non era stato controllato.
+      reason: "Launch not analyzed (bundles, snipers, dev buy)",
+      riskPoints: 70,
     };
   }
 

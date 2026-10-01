@@ -14,8 +14,9 @@ import {
 import { checkTopHolderConcentration } from "./top-holder-concentration.js";
 import type { FilterCheck } from "./types.js";
 
-const MEDIUM_THRESHOLD = 34;
-const HIGH_THRESHOLD = 67;
+// Ricalibrazione 2026-10-01: soglie più basse, anche combinazioni di segnali medi scartano.
+const MEDIUM_THRESHOLD = 25;
+const HIGH_THRESHOLD = 50;
 
 export const RISK_FILTERS: ((event: RawLaunchEvent) => FilterCheck)[] = [
   checkTopHolderConcentration,

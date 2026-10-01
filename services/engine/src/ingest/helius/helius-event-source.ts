@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import type { EventSource, LaunchPattern, RawLaunchEvent, UnverifiedAspect } from "../event-source.js";
+import { skipLaunchAnalysisReason } from "../../filters/prefilter.js";
 import { fetchMintInfo, fetchTopHolderPercentages, fetchWalletFirstSeen, walletAgeDays } from "./enrich.js";
 import { type DailyBudget, type EnhancedApi, fetchTokenHistory, type TokenHistory } from "./history.js";
 import { parseCreatePool, type RawTransaction } from "./parse-create-pool.js";
@@ -174,15 +175,26 @@ export class HeliusEventSource implements EventSource {
       return null;
     }
 
-    const [topHolderPercentages, devFirstSeen, history, imageUrl] = await Promise.all([
+    const [topHolderPercentages, devFirstSeen, imageUrl] = await Promise.all([
       // Può fallire (es. "not a Token mint" su alcuni mint appena migrati): non scartare
       // tutto il segnale, marca solo la distribuzione come non verificata.
       fetchTopHolderPercentages(rpc, pool.tokenMint, mint.supplyRaw, [pool.poolBaseVault]).catch(
         (): number[] | null => null,
       ),
       fetchWalletFirstSeen(rpc, pool.coinCreator).catch((): number | null => null),
-      this.options.history
-        ? fetchTokenHistory(
+      mint.uri ? fetchTokenImage(mint.uri) : Promise.resolve(undefined),
+    ]);
+
+    // L'analisi del lancio costa chiamate Helius a budget giornaliero: si spende solo sui
+    // token che superano i controlli economici (gli altri sono già scartati).
+    const skipReason = skipLaunchAnalysisReason({
+      initialLiquiditySol: pool.initialLiquiditySol,
+      topHolderPercentages,
+      devWalletAgeDays: walletAgeDays(devFirstSeen, this.now() / 1000),
+    });
+    const history: TokenHistory =
+      this.options.history && skipReason === null
+        ? await fetchTokenHistory(
             { ...this.options.history, rpc },
             {
               mint: pool.tokenMint,
@@ -190,9 +202,7 @@ export class HeliusEventSource implements EventSource {
               supply: Number(mint.supplyRaw) / 10 ** mint.decimals,
             },
           ).catch((): TokenHistory => ({}))
-        : Promise.resolve<TokenHistory>({}),
-      mint.uri ? fetchTokenImage(mint.uri) : Promise.resolve(undefined),
-    ]);
+        : {};
     const { previousLaunches, previousLaunchesMigrated, launch: analysis } = history;
     const snipers = analysis?.snipers;
 

@@ -27,7 +27,7 @@ describe("checkTopHolderConcentration", () => {
     });
     const result = checkTopHolderConcentration(event);
     expect(result.passed).toBe(false);
-    expect(result.riskPoints).toBe(35);
+    expect(result.riskPoints).toBe(70);
     expect(result.reason).toContain("87");
   });
 });

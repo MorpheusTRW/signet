@@ -1,4 +1,5 @@
 import type { RawLaunchEvent } from "../ingest/event-source.js";
+import { MIN_DEV_WALLET_AGE_DAYS } from "./prefilter.js";
 import type { FilterCheck } from "./types.js";
 
 const YOUNG_WALLET_DAYS = 7;
@@ -48,6 +49,16 @@ export function checkDevWalletHistory(event: RawLaunchEvent): FilterCheck {
         riskPoints: 12,
       };
     }
+  }
+
+  // Wallet creato per il lancio, senza alcuno storico: scartato (ricalibrazione 2026-10-01).
+  if (walletAgeDays < MIN_DEV_WALLET_AGE_DAYS) {
+    return {
+      id: "dev-wallet-history",
+      passed: false,
+      reason: "Dev wallet created today (no history)",
+      riskPoints: 70,
+    };
   }
 
   // Con l'analisi del lancio, il wallet usa e getta è valutato da fresh-dev-wallet (in minuti).

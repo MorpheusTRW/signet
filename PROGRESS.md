@@ -171,6 +171,8 @@
 
 - **Storico chiamate e quota FREE (2026-10-01)**: `GET /calls` (paginato a cursore, filtro passate/scartate) con l'esito di ogni chiamata (+1h, +24h e adesso dalla pool); FREE vede le ultime `FREE_HISTORY_HOURS` col suo ritardo, PRO/HOLDER da sempre. Schermata "All calls" dal Feed. **Bug corretto**: la quota FREE di 20/giorno contava anche i token scartati (che il feed mostra come "Just rejected"), quindi si esauriva e il feed restava senza segnali; ora la query delle consegne conta solo i segnali passati (feed, push e `/me/tier.signalsToday`). Il feed mostra "N/20 free signals today" e "Daily limit reached".
 
+- **Filtri più restrittivi (2026-10-01)**, ricalibrati su 1.133 chiamate reali con esito a +1h (regole ricavate sulla prima metà delle 24h, verificate sulla seconda). Trovato: "Low/Medium" crollavano oltre il 90% quanto gli "High" (75–79% contro 72%), perché ~90% dei token passava senza analisi del lancio (budget Helius da 200 chiamate esaurito presto, speso anche su finte migrazioni). Modifiche: lancio non analizzato, holder non verificati, top 10 ≥65% e wallet dev creato il giorno stesso = scarto (+70); burner (dev attivato <60 min prima) 15→35; soglie dei livelli 34/67→25/50; prefiltro (`src/filters/prefilter.ts`) che spende l'analisi Helius solo sui token che superano i controlli economici. Stima sui dati: da ~900 a qualche decina di chiamate al giorno; crolli a 1h stimati 45–60% contro 77% (campione dell'analisi piccolo, da rimisurare). I segnali già salvati restano col vecchio livello.
+
 ### Da fare
 - % di supply ancora detenuta da sniper/bundle al momento della migrazione (rischio di dump imminente); adapter swap per bonding curve pump.fun (Jupiter non la instrada).
 

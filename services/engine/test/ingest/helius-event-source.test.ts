@@ -110,25 +110,20 @@ describe("HeliusEventSource", () => {
     source.stop();
   });
 
-  it("con lo storico disponibile, snipe e lanci del dev sono verificati (i rug no)", async () => {
+  it("una migrazione anomala non consuma il budget Helius: l'analisi del lancio non parte ed è scartata", async () => {
     const events: RawLaunchEvent[] = [];
     const history = {
-      enhanced: vi.fn(async (_address: string, query: Record<string, string>) =>
-        query.type === "CREATE" ? [] : [{ signature: "c", slot: 10, type: "CREATE", source: "PUMP_FUN", feePayer: "x", transactionError: null, tokenTransfers: [] }],
-      ),
+      enhanced: vi.fn(async () => []),
       budget: new DailyBudget(100),
     };
     const { source } = makeSource(fakeRpc().rpc, { history });
     source.start((e) => events.push(e));
     await source.handleMessage(notification("H", CREATE_POOL_LOGS));
     const e = events[0]!;
-    expect(e.unverified).toEqual(["dev-rugs"]);
-    expect(e.snipedWalletsCount).toBe(0);
-    expect(e.devWalletHistory.previousLaunches).toBe(0);
-    expect(e.devWalletHistory.previousLaunchesMigrated).toBe(0);
-    const signal = buildSignal(e);
-    expect(signal.summary).toContain("No previous dev launches found");
-    expect(signal.summary).toContain("No snipes detected");
+    // Il fixture ha ~0,64 SOL di liquidità: già scartato dai controlli economici.
+    expect(history.enhanced).not.toHaveBeenCalled();
+    expect(e.unverified).toEqual(["dev-rugs", "dev-launches", "snipes"]);
+    expect(buildSignal(e).riskReport.level).toBe("high");
     source.stop();
   });
 
