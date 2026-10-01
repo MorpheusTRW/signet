@@ -45,19 +45,19 @@ export function selectSignalsForTier(
     return { signals: eligible.slice(0, requestedLimit), newlyDeliveredIds: [] };
   }
 
-  const alreadyDelivered = eligible.filter((s) =>
-    alreadyDeliveredIdsToday.has(s.id),
-  );
-  const notYetDelivered = eligible.filter(
-    (s) => !alreadyDeliveredIdsToday.has(s.id),
-  );
-  const remainingQuota = Math.max(
-    0,
-    limits.maxSignalsPerDay - alreadyDeliveredIdsToday.size,
-  );
+  // La quota giornaliera conta solo i segnali passati dai filtri: gli scartati (rischio
+  // alto) non sono chiamate da seguire, si vedono sempre e non la consumano.
+  const rejected = eligible.filter((s) => s.riskReport.level === "high");
+  const passed = eligible.filter((s) => s.riskReport.level !== "high");
+  const knownRejectedIds = new Set(candidatesDesc.filter((s) => s.riskReport.level === "high").map((s) => s.id));
+  const usedQuota = [...alreadyDeliveredIdsToday].filter((id) => !knownRejectedIds.has(id)).length;
+
+  const alreadyDelivered = passed.filter((s) => alreadyDeliveredIdsToday.has(s.id));
+  const notYetDelivered = passed.filter((s) => !alreadyDeliveredIdsToday.has(s.id));
+  const remainingQuota = Math.max(0, limits.maxSignalsPerDay - usedQuota);
   const newlyIncluded = notYetDelivered.slice(0, remainingQuota);
 
-  const merged = [...alreadyDelivered, ...newlyIncluded]
+  const merged = [...alreadyDelivered, ...newlyIncluded, ...rejected]
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     .slice(0, requestedLimit);
 

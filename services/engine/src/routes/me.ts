@@ -1,6 +1,8 @@
 import { pubkeySchema } from "@seeker-signal/shared";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
+import type { SignalDeliveriesRepo } from "../db/signal-deliveries-repo.js";
+import type { SignalsRepo } from "../db/signals-repo.js";
 import type { ResolveTierDeps } from "../entitlements/resolve-tier.js";
 import { resolveTier } from "../entitlements/resolve-tier.js";
 
@@ -9,6 +11,7 @@ const tierQuerySchema = z.object({ pubkey: pubkeySchema });
 export function registerMeRoutes(
   app: FastifyInstance,
   deps: ResolveTierDeps,
+  usage: { signalsRepo: SignalsRepo; signalDeliveriesRepo: SignalDeliveriesRepo },
 ): void {
   app.get("/me/tier", async (request, reply) => {
     const query = tierQuerySchema.safeParse(request.query);
@@ -20,11 +23,17 @@ export function registerMeRoutes(
 
     const resolution = await resolveTier(query.data.pubkey, deps);
 
+    // Segnali passati dai filtri già consegnati oggi (UTC): è ciò che conta per la quota FREE.
+    const signalsToday = [...usage.signalDeliveriesRepo.listDeliveredTodayIds(query.data.pubkey)].filter(
+      (id) => usage.signalsRepo.findById(id)?.riskReport.level !== "high",
+    ).length;
+
     return {
       pubkey: query.data.pubkey,
       tier: resolution.tier,
       expiresAt: resolution.expiresAt,
       limits: resolution.limits,
+      signalsToday,
     };
   });
 }

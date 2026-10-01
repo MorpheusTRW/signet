@@ -103,7 +103,10 @@ export function buildServer(env: Env, deps: ServerDeps): FastifyInstance {
     panicSellWindowMinutes: env.PANIC_SELL_WINDOW_MINUTES,
     maxExposureFraction: deps.paperTradingConfig.maxExposureFraction,
   });
-  registerMeRoutes(app, deps.resolveTierDeps);
+  registerMeRoutes(app, deps.resolveTierDeps, {
+    signalsRepo: deps.signalsRepo,
+    signalDeliveriesRepo: deps.signalDeliveriesRepo,
+  });
   registerTrackRecordRoutes(app, deps.trackRecordsRepo, deps.trackRecordSource);
   registerBuildSwapRoute(app, {
     signalsRepo: deps.signalsRepo,

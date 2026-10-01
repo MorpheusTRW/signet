@@ -127,3 +127,45 @@ describe("selectSignalsForTier", () => {
     expect(signals).toHaveLength(2);
   });
 });
+
+describe("selectSignalsForTier — quota FREE e token scartati", () => {
+  const tierConfig = makeTierConfig({
+    free: { signalDelaySeconds: 0, maxSignalsPerDay: 2, historyHours: 24, platformFeeBps: 75 },
+  });
+  const freeLimits = getTierLimits("free", tierConfig);
+  const signal = (id: string, minutesAgo: number, level: "low" | "high"): Signal => ({
+    id,
+    createdAt: new Date(NOW.getTime() - minutesAgo * 60_000).toISOString(),
+    program: "pumpswap",
+    tokenMint: "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    poolAddress: "5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1",
+    initialLiquiditySol: 85,
+    riskReport: { score: level === "high" ? 90 : 10, level, reasons: ["r"] },
+    summary: "s",
+  });
+
+  it("gli scartati si vedono sempre e non consumano la quota", () => {
+    const candidates = [signal("h1", 1, "high"), signal("h2", 2, "high"), signal("p1", 3, "low"), signal("p2", 4, "low"), signal("p3", 5, "low")];
+    const { signals, newlyDeliveredIds } = selectSignalsForTier({
+      now: NOW,
+      candidatesDesc: candidates,
+      limits: freeLimits,
+      alreadyDeliveredIdsToday: new Set(),
+      requestedLimit: 50,
+    });
+    expect(signals.map((s) => s.id)).toEqual(["h1", "h2", "p1", "p2"]);
+    expect(newlyDeliveredIds).toEqual(["p1", "p2"]);
+  });
+
+  it("consegne passate di token scartati non tolgono quota ai segnali buoni", () => {
+    const candidates = [signal("p1", 1, "low"), signal("h1", 2, "high"), signal("h2", 3, "high")];
+    const { newlyDeliveredIds } = selectSignalsForTier({
+      now: NOW,
+      candidatesDesc: candidates,
+      limits: freeLimits,
+      alreadyDeliveredIdsToday: new Set(["h1", "h2"]),
+      requestedLimit: 50,
+    });
+    expect(newlyDeliveredIds).toEqual(["p1"]);
+  });
+});
