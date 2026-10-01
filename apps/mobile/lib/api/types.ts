@@ -1,3 +1,5 @@
+import type { Signal } from '@seeker-signal/shared'
+
 // Tipi di risposta specifici dell'engine, non presenti in @seeker-signal/shared
 // (che copre solo Signal/RiskReport/SwapRequest). Devono restare in sync a
 // mano con services/engine/src/entitlements/types.ts e
@@ -18,6 +20,8 @@ export interface MeTierResponse {
   tier: Tier
   expiresAt: string | null
   limits: TierLimits
+  /** Segnali passati dai filtri già ricevuti oggi (UTC): quota FREE. */
+  signalsToday: number
 }
 
 export interface CategoryWindowStats {
@@ -158,4 +162,24 @@ export interface RecapResponse {
   rugsDodged: number
   signalsApproved: number
   streakDays: number
+}
+
+// In sync con services/engine/src/routes/calls.ts.
+export type CallsFilter = 'all' | 'passed' | 'rejected'
+
+export interface CallOutcome {
+  change1hPct: number | null
+  change24hPct: number | null
+  /** Variazione dal segnale a adesso, letta dalla pool (null = non leggibile). */
+  nowPct: number | null
+}
+
+export interface CallsResponse {
+  tier: Tier
+  /** null = storico completo (PRO/HOLDER). */
+  windowHours: number | null
+  delaySeconds: number
+  counts: { total: number; passed: number; rejected: number }
+  calls: { signal: Signal; outcome: CallOutcome }[]
+  nextBefore: string | null
 }

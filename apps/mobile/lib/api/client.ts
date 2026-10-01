@@ -3,6 +3,8 @@ import { AppConfig } from '@/constants/app-config'
 import type {
   BuildSwapErrorBody,
   BuildSwapResponse,
+  CallsFilter,
+  CallsResponse,
   DodgedResponse,
   EngineStatus,
   MeTierResponse,
@@ -85,6 +87,12 @@ export function getDodged(pubkey?: string): Promise<DodgedResponse> {
 
 export function getRecap(pubkey: string): Promise<RecapResponse> {
   return request<RecapResponse>(`/recap?pubkey=${encodeURIComponent(pubkey)}`)
+}
+
+export function getCalls(params: { pubkey: string; filter: CallsFilter; before?: string }): Promise<CallsResponse> {
+  const query = new URLSearchParams({ pubkey: params.pubkey, filter: params.filter })
+  if (params.before) query.set('before', params.before)
+  return request<CallsResponse>(`/calls?${query.toString()}`)
 }
 
 export function getTrackRecord(): Promise<TrackRecordStats> {

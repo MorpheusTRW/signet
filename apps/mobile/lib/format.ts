@@ -55,3 +55,8 @@ export function shortReason(reason: string): string {
 export function formatCount(value: number): string {
   return value.toLocaleString('en-US')
 }
+
+/** true se `iso` è più recente di `maxAgeMs`. */
+export function isFresh(iso: string, maxAgeMs: number, now: number = Date.now()): boolean {
+  return now - new Date(iso).getTime() < maxAgeMs
+}

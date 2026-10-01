@@ -57,7 +57,12 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets()
   const { settings } = useSettings()
 
-  const tierQuery = useQuery({ queryKey: ['me-tier', pubkey], queryFn: () => getMeTier(pubkey!), enabled: !!pubkey })
+  const tierQuery = useQuery({
+    queryKey: ['me-tier', pubkey],
+    queryFn: () => getMeTier(pubkey!),
+    enabled: !!pubkey,
+    refetchInterval: REFETCH_INTERVAL_MS,
+  })
   const radarQuery = useQuery({ queryKey: ['radar'], queryFn: getRadar, refetchInterval: REFETCH_INTERVAL_MS })
   const signalsQuery = useQuery({
     queryKey: ['signals', pubkey],
@@ -82,6 +87,8 @@ export default function FeedScreen() {
 
   if (!pubkey) return <ConnectHero />
 
+  const maxPerDay = tierQuery.data?.limits.maxSignalsPerDay
+  const quotaReached = maxPerDay != null && (tierQuery.data?.signalsToday ?? 0) >= maxPerDay
   const radar = radarQuery.data
   const rejected = radar?.recentRejected.slice(0, 3) ?? []
   const earlier = passed.slice(1, 1 + EARLIER_SIGNALS)
@@ -133,14 +140,29 @@ export default function FeedScreen() {
           />
         ) : (
           <Animated.View entering={FadeIn.duration(motion.base)} style={styles.waiting}>
-            <Text variant="heading">{signalsQuery.isLoading ? 'Tuning in…' : 'Listening to the chain'}</Text>
+            <Text variant="heading">
+              {signalsQuery.isLoading ? 'Tuning in…' : quotaReached ? 'Daily limit reached' : 'Listening to the chain'}
+            </Text>
             <Text variant="secondary">
               {signalsQuery.isError
                 ? 'Service unreachable. Retrying shortly.'
-                : 'A signal lands here as soon as a new token passes the filters.'}
+                : quotaReached
+                  ? 'You have used today’s free signals. New ones arrive tomorrow (UTC), or in real time with Pro.'
+                  : 'A signal lands here as soon as a new token passes the filters.'}
             </Text>
           </Animated.View>
         )}
+
+        {quotaReached ? (
+          <Pressable onPress={() => router.push('/plans')} style={styles.quota} accessibilityRole="link">
+            <Text variant="mono" color={palette.text}>
+              {`${tierQuery.data!.signalsToday}/${tierQuery.data!.limits.maxSignalsPerDay} free signals today`}
+            </Text>
+            <Text variant="caption" color={palette.accent}>
+              Pro: unlimited →
+            </Text>
+          </Pressable>
+        ) : null}
 
         {rejected.length > 0 ? (
           <View style={styles.section}>
@@ -171,6 +193,19 @@ export default function FeedScreen() {
             ))}
           </View>
         ) : null}
+
+        <Pressable
+          accessibilityRole="link"
+          onPress={() => router.push('/calls')}
+          style={({ pressed }) => [styles.allCalls, pressed && { opacity: 0.7 }]}
+        >
+          <Text variant="heading" color={palette.accent}>
+            See all calls
+          </Text>
+          <Text variant="caption">
+            {tierQuery.data?.limits.historyHours != null ? `Last ${tierQuery.data.limits.historyHours}h · Pro: all time` : 'All time'}
+          </Text>
+        </Pressable>
       </ScrollView>
     </View>
   )
@@ -204,4 +239,21 @@ const styles = StyleSheet.create({
   section: { gap: 8, paddingHorizontal: 20, paddingTop: 20 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16, paddingVertical: 12 },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: palette.hairline },
+  quota: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  allCalls: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: palette.hairline,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
 })

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Signet",
     "slug": "seeker-signal",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "seeker-signal",
@@ -18,7 +18,7 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.seekersignal.app",
       "googleServicesFile": "./google-services.json",
-      "versionCode": 3
+      "versionCode": 4
     },
     "web": {
       "output": "static",

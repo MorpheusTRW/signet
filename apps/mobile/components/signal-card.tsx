@@ -7,7 +7,10 @@ import { FingerprintGlyph } from '@/components/fingerprint-rings'
 import { TokenAvatar } from '@/components/ui/bits'
 import { Text } from '@/components/ui/text'
 import { fonts, motion, palette, radius, risk } from '@/constants/theme'
-import { compactAge, tokenTicker } from '@/lib/format'
+import { compactAge, isFresh, tokenTicker } from '@/lib/format'
+
+/** Oltre questa età la card dice "Latest signal" invece di "New signal". */
+const FRESH_MS = 10 * 60_000
 
 /** Colore del badge: avorio per il rischio basso (come il mockup), semantico per gli altri. */
 const BADGE_COLOR: Record<RiskLevel, string> = {
@@ -55,7 +58,7 @@ export function SignalCard({
       >
         <View style={styles.top}>
           <Text variant="label" color={palette.accent}>
-            {`New signal · ${compactAge(signal.createdAt)}`}
+            {`${isFresh(signal.createdAt, FRESH_MS) ? 'New signal' : 'Latest signal'} · ${compactAge(signal.createdAt)}`}
           </Text>
           <RiskBadge level={level} />
         </View>
