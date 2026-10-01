@@ -23,12 +23,17 @@ export class SignalDeliveriesRepo {
     insertMany(signalIds);
   }
 
-  /** Id dei segnali già consegnati a questo wallet dall'inizio della giornata UTC corrente. */
+  /**
+   * Id dei segnali passati dai filtri già consegnati a questo wallet dall'inizio della
+   * giornata UTC: è il contatore della quota FREE (feed e push). I token scartati
+   * (rischio alto) non sono chiamate da seguire e non consumano quota.
+   */
   listDeliveredTodayIds(walletPubkey: string, now: Date = new Date()): Set<string> {
     const rows = this.db
       .prepare(
-        `SELECT signal_id FROM signal_deliveries
-         WHERE wallet_pubkey = ? AND delivered_at >= ?`,
+        `SELECT d.signal_id FROM signal_deliveries d
+         JOIN signals s ON s.id = d.signal_id
+         WHERE d.wallet_pubkey = ? AND d.delivered_at >= ? AND s.risk_level != 'high'`,
       )
       .all(walletPubkey, startOfUtcDay(now)) as { signal_id: string }[];
     return new Set(rows.map((r) => r.signal_id));

@@ -157,15 +157,4 @@ describe("selectSignalsForTier — quota FREE e token scartati", () => {
     expect(newlyDeliveredIds).toEqual(["p1", "p2"]);
   });
 
-  it("consegne passate di token scartati non tolgono quota ai segnali buoni", () => {
-    const candidates = [signal("p1", 1, "low"), signal("h1", 2, "high"), signal("h2", 3, "high")];
-    const { newlyDeliveredIds } = selectSignalsForTier({
-      now: NOW,
-      candidatesDesc: candidates,
-      limits: freeLimits,
-      alreadyDeliveredIdsToday: new Set(["h1", "h2"]),
-      requestedLimit: 50,
-    });
-    expect(newlyDeliveredIds).toEqual(["p1"]);
-  });
 });

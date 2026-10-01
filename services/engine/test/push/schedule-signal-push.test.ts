@@ -96,7 +96,8 @@ describe("scheduleSignalPush", () => {
     db = ctx.db;
 
     // Consuma manualmente 2 delle 3 quote giornaliere (limite di default nel fixture).
-    ctx.signalDeliveriesRepo.record(ctx.device.walletPubkey, ["prior-1", "prior-2"], NOW);
+    const prior = [ctx.insertSignal(), ctx.insertSignal()].map((s) => s.id);
+    ctx.signalDeliveriesRepo.record(ctx.device.walletPubkey, prior, NOW);
 
     const signal = ctx.insertSignal();
     await scheduleSignalPush(signal, ctx.deps, NOW);
@@ -113,7 +114,8 @@ describe("scheduleSignalPush", () => {
   it("schedules nothing once the FREE quota is already exhausted", async () => {
     const ctx = setup(false);
     db = ctx.db;
-    ctx.signalDeliveriesRepo.record(ctx.device.walletPubkey, ["prior-1", "prior-2", "prior-3"], NOW);
+    const prior = [ctx.insertSignal(), ctx.insertSignal(), ctx.insertSignal()].map((s) => s.id);
+    ctx.signalDeliveriesRepo.record(ctx.device.walletPubkey, prior, NOW);
 
     const signal = ctx.insertSignal();
     await scheduleSignalPush(signal, ctx.deps, NOW);
@@ -134,7 +136,8 @@ describe("scheduleSignalPush", () => {
       data: { type: "limit-reached", route: "/plans" },
       scheduledAt: NOW,
     });
-    ctx.signalDeliveriesRepo.record(ctx.device.walletPubkey, ["prior-1", "prior-2"], NOW);
+    const prior = [ctx.insertSignal(), ctx.insertSignal()].map((s) => s.id);
+    ctx.signalDeliveriesRepo.record(ctx.device.walletPubkey, prior, NOW);
 
     const signal = ctx.insertSignal();
     await scheduleSignalPush(signal, ctx.deps, NOW);

@@ -6,7 +6,7 @@ export interface SelectSignalsParams {
   /** Candidati già ordinati per createdAt decrescente (più recente prima). */
   candidatesDesc: Signal[];
   limits: TierLimits;
-  /** Id dei segnali già consegnati oggi a questo wallet (solo rilevante se maxSignalsPerDay è impostato). */
+  /** Id dei segnali passati dai filtri già consegnati oggi a questo wallet (quota FREE). */
   alreadyDeliveredIdsToday: ReadonlySet<string>;
   requestedLimit: number;
 }
@@ -49,12 +49,9 @@ export function selectSignalsForTier(
   // alto) non sono chiamate da seguire, si vedono sempre e non la consumano.
   const rejected = eligible.filter((s) => s.riskReport.level === "high");
   const passed = eligible.filter((s) => s.riskReport.level !== "high");
-  const knownRejectedIds = new Set(candidatesDesc.filter((s) => s.riskReport.level === "high").map((s) => s.id));
-  const usedQuota = [...alreadyDeliveredIdsToday].filter((id) => !knownRejectedIds.has(id)).length;
-
   const alreadyDelivered = passed.filter((s) => alreadyDeliveredIdsToday.has(s.id));
   const notYetDelivered = passed.filter((s) => !alreadyDeliveredIdsToday.has(s.id));
-  const remainingQuota = Math.max(0, limits.maxSignalsPerDay - usedQuota);
+  const remainingQuota = Math.max(0, limits.maxSignalsPerDay - alreadyDeliveredIdsToday.size);
   const newlyIncluded = notYetDelivered.slice(0, remainingQuota);
 
   const merged = [...alreadyDelivered, ...newlyIncluded, ...rejected]
